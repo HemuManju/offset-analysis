@@ -10,3 +10,6 @@ config = yaml.load(open(str(config_path)), Loader=yaml.SafeLoader)
 
 with skip_run('run', 'Create EEG data') as check, check():
     create_eeg_data(config)
+
+with skip_run('run', 'Create EEG data') as check, check():
+    create_eeg_data(config)
