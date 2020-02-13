@@ -62,6 +62,14 @@ def animate(epochs, config):
             ax[i].cla()
 
 
+def read_xdf(config, subject, data_type):
+    # Read path
+    read_path = 'data/raw/sub-P001_ses-S001_task-T1_run-001_eeg.xdf'
+    test_path = 'data/raw/Sub_OFS_1002/XDF/Sub_OFS_1002_Level_00_Session_0.xdf'
+    raw = read_raw_xdf(read_path)
+    return raw
+
+
 def read_xdf_eeg_data(config, subject):
     read_path = config['raw_eeg_path'] + 'S_' + subject + '/eeg.xdf'
     raw = read_raw_xdf(read_path)
@@ -77,7 +85,6 @@ def read_xdf_eeg_data(config, subject):
     events = mne.make_fixed_length_events(raw, duration=epoch_length)
     epochs = mne.Epochs(raw, events, picks=ch_names, verbose=False)
     animate(epochs, config)
-
     return raw
 
 

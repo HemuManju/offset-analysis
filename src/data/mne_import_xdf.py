@@ -225,10 +225,45 @@ def _find_stream_by_type(streams, stream_type="EEG"):
             return stream
 
 
+def _b_alert_ch_info():
+    channels = []
+    # EEG channels
+    eeg_channels = [
+        'Fp1', 'F7', 'F8', 'T4', 'T6', 'T5', 'T3', 'Fp2', 'O1', 'P3', 'Pz',
+        'F3', 'Fz', 'F4', 'C4', 'P4', 'POz', 'C3', 'Cz', 'O2'
+    ]
+    for ch in eeg_channels:
+        channels.append({
+            'label': [ch],
+            'type': ['EEG'],
+            'unit': ['microvolts']
+        })
+    # ECG channel
+    channels.append({
+        'label': ['ECG'],
+        'type': ['ECG'],
+        'unit': ['microvolts']
+    })
+    # Auxillary channels
+    aux_channels = ['AUX1', 'AUX2', 'AUX3']
+    for ch in aux_channels:
+        channels.append({
+            'label': [ch],
+            'type': ['AUX'],
+            'unit': ['microvolts']
+        })
+    return channels
+
+
 def _get_ch_info(stream):
     labels, types, units = [], [], []
+
     if stream["info"]["desc"]:
-        for ch in stream["info"]["desc"][0]["channels"][0]["channel"]:
+        if not stream["info"]["desc"][0]["channels"]:
+            channels = _b_alert_ch_info()
+        else:
+            channels = stream["info"]["desc"][0]["channels"][0]["channel"]
+        for ch in channels:
             labels.append(str(ch["label"][0]))
             types.append(ch["type"][0])
             units.append(ch["unit"][0])

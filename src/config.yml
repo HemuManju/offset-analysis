@@ -8,6 +8,7 @@ subjects: ['1000']
 ##---------------------------------------------------------------------##
 # Experiment 0
 # Path
-raw_eeg_path: 'data/raw/eeg/'
+raw_eeg_path:  'data/raw/eeg/'
 force_data_path: 'data/raw/force_data/'
 raw_eeg_data: 'data/interim/raw_eeg_exp_0_dataset.h5'
+image_save_path: 'data/processed/image_data/'
