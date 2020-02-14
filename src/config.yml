@@ -1,14 +1,17 @@
-### EEG data parameters
+# Global parameters
 epoch_length: 1.0
 n_electrodes: 30
 freq_bands: [[4, 7], [8, 13], [14, 35], [35, 45]]
-sfreq: 500
+sfreq: 256.0
 overlap: 0.75
-subjects: ['1000']
+subjects: ['2000', '2001', '2002', '2003', '2004', '2005', '2007'] # 2006
+sessions: ['S001', 'S002', 'S003', 'S004', 'S005']
 ##---------------------------------------------------------------------##
 # Experiment 0
 # Path
-raw_eeg_path:  'data/raw/eeg/'
+raw_xdf_path: 'data/raw/'
 force_data_path: 'data/raw/force_data/'
-raw_eeg_data: 'data/interim/raw_eeg_exp_0_dataset.h5'
+
+raw_eeg_dataset: 'data/interim/raw_eeg_exp_0_dataset.h5'
+clean_eeg_dataset: 'data/processed/clean_eeg_exp_0_dataset.h5'
 image_save_path: 'data/processed/image_data/'
