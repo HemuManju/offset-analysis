@@ -138,6 +138,8 @@ def write_mne_to_edf(config):
             raw_info = eeg_data.info
             raw_eeg = mne.io.RawArray(raw_data, raw_info)
 
+            raw_eeg.plot(block=True)
+
             # Save the file
             subject_file = 'sub_OFS_' + subject
             session_file = 'ses-' + session

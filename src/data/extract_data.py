@@ -1,11 +1,13 @@
 import collections
 
+import numpy as np
+import pandas as pd
+
 import mne
 from .mne_import_xdf import read_raw_xdf
 
 
 def read_xdf_eeg_data(config, subject, session):
-
     # Parameters
     subject_file = 'sub_OFS_' + subject
     session_file = 'ses-' + session
@@ -61,6 +63,7 @@ def read_xdf_eeg_data(config, subject, session):
                         picks=['eeg'],
                         tmin=0,
                         tmax=config['epoch_length'],
+                        baseline=(0, 0),
                         verbose=False)
     return epochs
 
@@ -78,3 +81,50 @@ def extract_eeg_data(config):
             eeg_data[session]['eeg'] = epochs
         data['sub_OFS_' + subject] = eeg_data
     return data
+
+
+def extract_individual_diff(config):
+    individual_diff_data = np.zeros((len(config['subjects']), 2))
+
+    for i, subject in enumerate(config['subjects']):
+        for task in config['individual_diff']:
+            # Save the file
+            subject_file = 'sub_OFS_' + subject
+            read_path = ''.join([
+                config['raw_xdf_path'], subject_file, '/', task, '/', task,
+                '_OFS_', subject, '.csv'
+            ])
+            if task == 'MOT':
+                mot_df = pd.read_csv(read_path)
+                individual_diff_data[i, 0] = np.mean(
+                    mot_df['N_Reponse'].values) / 4
+            else:
+                vs_df = pd.read_csv(read_path)
+                individual_diff_data[i,
+                                     1] = np.sum(vs_df['Accuracy'].values) / 30
+    return individual_diff_data
+
+
+def read_eye_data(config, subject, session):
+    # Parameters
+    subject_file = 'sub_OFS_' + subject
+    # Read paths
+    read_path = ''.join([
+        config['raw_xdf_path'], subject_file, '/tobii/', 'SUB_', subject,
+        '_fixation_',
+        session.lower(), '.csv'
+    ])
+    data = np.genfromtxt(read_path, delimiter=',')
+    return data
+
+
+def extract_eye_data(config):
+    sessions = config['sessions']
+    eye_data = {}
+    for subject in ['2000', '2001', '2002', '2003', '2004', '2005']:
+        data = collections.defaultdict(dict)
+        for session in sessions:
+            temp_data = read_eye_data(config, subject, session)
+            data[session]['eye'] = temp_data
+        eye_data['sub_OFS_' + subject] = data
+    return eye_data

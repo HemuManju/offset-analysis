@@ -133,7 +133,8 @@ def clean_eeg_data(subjects, sessions, config):
             epochs = raw_eeg['sub_OFS_' + subject][session]['eeg']
 
             repaired_eeg_epoch = autoreject_repair_epochs(epochs.load_data())
-            ica_epochs, ica = clean_with_ica(repaired_eeg_epoch, show_ica=True)
+            ica_epochs, ica = clean_with_ica(repaired_eeg_epoch,
+                                             show_ica=False)
 
             data[session]['clean_eeg'] = ica_epochs
             data[session]['ica'] = ica
