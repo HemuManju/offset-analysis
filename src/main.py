@@ -25,7 +25,7 @@ from utils import skip_run
 config_path = Path(__file__).parents[1] / 'src/config.yml'
 config = yaml.load(open(str(config_path)), Loader=yaml.SafeLoader)
 
-with skip_run('skip', 'Extract EEG data') as check, check():
+with skip_run('run', 'Extract EEG data') as check, check():
     raw_eeg_data = extract_eeg_data(config)
     save_path = Path(__file__).parents[1] / config['raw_eeg_dataset']
     save_dataset(str(save_path), raw_eeg_data, save=True)
@@ -59,7 +59,7 @@ with skip_run('skip', 'EEG feature extraction') as check, check():
     save_path = Path(__file__).parents[1] / config['eeg_features_path']
     eeg_dataframe.to_hdf(str(save_path), key='eeg_dataframe')
 
-with skip_run('run', 'Eye feature extraction') as check, check():
+with skip_run('skip', 'Eye feature extraction') as check, check():
     eye_dataframe = extract_eye_features(config)
     save_path = Path(__file__).parents[1] / config['eye_features_path']
     eye_dataframe.to_hdf(str(save_path), key='eye_dataframe')
@@ -67,7 +67,7 @@ with skip_run('run', 'Eye feature extraction') as check, check():
 with skip_run('skip', 'EEG feature analysis') as check, check():
     eeg_features_analysis(config)
 
-with skip_run('run', 'Eye feature analysis') as check, check():
+with skip_run('skip', 'Eye feature analysis') as check, check():
     eye_features_analysis(config)
 
 with skip_run('skip', 'EEG feature visualization') as check, check():

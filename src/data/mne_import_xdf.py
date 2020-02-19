@@ -206,6 +206,7 @@ def read_raw_xdf(fname, stream_id=None):
 
 def _find_stream_by_name(streams, stream_name):
     """Find the first stream that matches the given name."""
+
     for stream in streams:
         if stream["info"]["name"][0] == stream_name:
             return stream
@@ -223,6 +224,46 @@ def _find_stream_by_type(streams, stream_type="EEG"):
     for stream in streams:
         if stream["info"]["type"][0] == stream_type:
             return stream
+
+
+def _tobii_ch_info():
+    channels = []
+    eye_channels = [
+        'device_time_stamp', 'avg_gaze_point_x', 'avg_gaze_point_y',
+        'avg_pupil_dia', 'avg_eye_pos_x', 'avg_eye_pos_y', 'avg_eye_pos_z',
+        'avg_eye_dist', 'eye_validity', 'device_timestamp',
+        'system_time_stamp', 'left_gaze_point_on_display_area_x',
+        'left_gaze_point_on_display_area_y',
+        'left_gaze_point_in_user_coordinate_x',
+        'left_gaze_point_in_user_coordinate_y',
+        'left_gaze_point_in_user_coordinate_z', 'left_gaze_point_validity',
+        'left_pupil_diameter', 'left_gaze_pupil_validity',
+        'left_gaze_origin_in_user_coordinate_system_x',
+        'left_gaze_origin_in_user_coordinate_system_y',
+        'left_gaze_origin_in_user_coordinate_system_z',
+        'left_gaze_origin_in_trackbox_coordinate_system_x',
+        'left_gaze_origin_in_trackbox_coordinate_system_y',
+        'left_gaze_origin_in_trackbox_coordinate_system_z',
+        'left_gaze_origin_validity', 'right_gaze_point_on_display_area_x',
+        'right_gaze_point_on_display_area_y',
+        'right_gaze_point_in_user_coordinate_x',
+        'right_gaze_point_in_user_coordinate_y',
+        'right_gaze_point_in_user_coordinate_z', 'right_gaze_point_validity',
+        'right_pupil_diameter', 'right_gaze_pupil_validity',
+        'right_gaze_origin_in_user_coordinate_system_x',
+        'right_gaze_origin_in_user_coordinate_system_y',
+        'right_gaze_origin_in_user_coordinate_system_z',
+        'right_gaze_origin_in_trackbox_coordinate_system_x',
+        'right_gaze_origin_in_trackbox_coordinate_system_y',
+        'right_gaze_origin_in_trackbox_coordinate_system_z',
+        'right_gaze_origin_validity', 'right_gaze_point_pixel_x'
+        'right_gaze_point_pixel_y', 'left_gaze_point_pixel_x',
+        'left_gaze_point_pixel_y', 'test'
+    ]
+    for ch in eye_channels:
+        channels.append({'label': [ch], 'type': ['EYE'], 'unit': [None]})
+
+    return channels
 
 
 def _b_alert_ch_info():
@@ -257,10 +298,12 @@ def _b_alert_ch_info():
 
 def _get_ch_info(stream):
     labels, types, units = [], [], []
-
     if stream["info"]["desc"]:
-        if not stream["info"]["desc"][0]["channels"]:
+        if stream["info"]["type"][0] == 'Eye tacking':
+            channels = _tobii_ch_info()
+        elif not stream["info"]["desc"][0]["channels"]:
             channels = _b_alert_ch_info()
+
         else:
             channels = stream["info"]["desc"][0]["channels"][0]["channel"]
         for ch in channels:

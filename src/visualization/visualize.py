@@ -104,7 +104,6 @@ def eye_features_visualize(config):
 
     # Group by complexity
     eye_complexity_group = eye_dataframe.groupby(['complexity']).mean().T
-    print(eye_complexity_group)
 
     title = [
         'Distraction', 'Low Engagement', 'High Engagement',

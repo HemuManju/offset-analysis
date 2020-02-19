@@ -11,7 +11,8 @@ def read_xdf_eeg_data(config, subject, session):
     # Parameters
     subject_file = 'sub_OFS_' + subject
     session_file = 'ses-' + session
-    xdf_file = 'sub_OFS_' + subject + '_ses-' + session + '_task-T1_run-001.xdf'
+    xdf_file = ''.join(
+        ['sub_OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
 
     # Read paths
     read_path = config[
@@ -68,6 +69,20 @@ def read_xdf_eeg_data(config, subject, session):
     return epochs
 
 
+def read_xdf_eye_data(config, subject, session):
+    # Parameters
+    subject_file = 'sub_OFS_' + subject
+    session_file = 'ses-' + session
+    xdf_file = ''.join(
+        ['sub_OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
+
+    # Read paths
+    read_path = config[
+        'raw_xdf_path'] + subject_file + '/' + session_file + '/' + xdf_file
+    raw = read_raw_xdf(read_path, stream_id='Tobii_Eye_Tracker')
+    return raw
+
+
 def extract_eeg_data(config):
     subjects = config['subjects']
     sessions = config['sessions']
@@ -76,7 +91,6 @@ def extract_eeg_data(config):
 
     for subject in subjects:
         for session in sessions:
-            print(subject, session)
             epochs = read_xdf_eeg_data(config, subject, session)
             eeg_data[session]['eeg'] = epochs
         data['sub_OFS_' + subject] = eeg_data
