@@ -112,7 +112,7 @@ def eye_features_visualize(config):
 
     for i in range(4):
         fig, ax = plt.subplots(figsize=[10, 5])
-        eeg_complexity_group.iloc[i].plot(kind='bar',
+        eye_complexity_group.iloc[i].plot(kind='bar',
                                           rot=0,
                                           color=colors,
                                           edgecolor='k',
