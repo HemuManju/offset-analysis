@@ -12,8 +12,11 @@ from data.utils import save_dataset, read_dataset
 
 from features.eeg_features import extract_cognitive_features
 from features.eye_features import extract_eye_features
+from features.offset_features import individual_features_with_time
 
-from models.eeg_analysis import (eeg_features_analysis, eye_features_analysis)
+from models.offset_analysis import (eeg_features_analysis,
+                                    eye_features_analysis,
+                                    individual_features_analysis)
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
                                      plot_settings, eye_features_visualize)
@@ -90,3 +93,11 @@ with skip_run('skip', 'EEG topoplot visualize') as check, check():
     data = read_dataset(str(read_path))
     epochs = data['sub_OFS_2008']['S005']['eeg'].load_data()
     topo_visualize(epochs, config)
+
+with skip_run('skip', 'Indiv difference with time') as check, check():
+    individual_dataframe = individual_features_with_time(config)
+    save_path = Path(__file__).parents[1] / config['individual_diff_path']
+    individual_dataframe.to_hdf(str(save_path), key='individual_dataframe')
+
+with skip_run('run', 'Indiv difference analysis') as check, check():
+    individual_features_analysis(config)
