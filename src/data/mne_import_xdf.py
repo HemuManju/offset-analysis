@@ -176,7 +176,9 @@ def read_raw_xdf(fname, stream_id=None):
     if stream is not None:
         name = stream["info"]["name"][0]
         n_chans = int(stream["info"]["channel_count"][0])
-        fs = float(stream["info"]["nominal_srate"][0])
+        # fs = float(stream["info"]["nominal_srate"][0])
+        # NOTE: Have used calculated rate
+        fs = float(stream["info"]["effective_srate"])
         logger.info(f"Found EEG stream '{name}' ({n_chans} channels, "
                     f"sampling rate {fs}Hz).")
         labels, types, units = _get_ch_info(stream)
@@ -184,7 +186,10 @@ def read_raw_xdf(fname, stream_id=None):
             labels = [str(n) for n in range(n_chans)]
         if not units:
             units = ["NA" for _ in range(n_chans)]
-        info = mne.create_info(ch_names=labels, sfreq=fs, ch_types="eeg")
+        info = mne.create_info(ch_names=labels,
+                               sfreq=fs,
+                               ch_types=types[0].lower(),
+                               verbose=False)
         # convert from microvolts to volts if necessary
         scale = np.array([1e-6 if u == "microvolts" else 1 for u in units])
         raw = mne.io.RawArray((stream["time_series"] * scale).T, info)
@@ -201,7 +206,7 @@ def read_raw_xdf(fname, stream_id=None):
         annotations = mne.Annotations(onsets, [0] * len(onsets), descriptions)
         raw.set_annotations(annotations)
 
-    return raw
+    return raw, stream['time_stamps']
 
 
 def _find_stream_by_name(streams, stream_name):
@@ -229,40 +234,20 @@ def _find_stream_by_type(streams, stream_type="EEG"):
 def _tobii_ch_info():
     channels = []
     eye_channels = [
-        'device_time_stamp', 'avg_gaze_point_x', 'avg_gaze_point_y',
-        'avg_pupil_dia', 'avg_eye_pos_x', 'avg_eye_pos_y', 'avg_eye_pos_z',
-        'avg_eye_dist', 'eye_validity', 'device_timestamp',
-        'system_time_stamp', 'left_gaze_point_on_display_area_x',
-        'left_gaze_point_on_display_area_y',
-        'left_gaze_point_in_user_coordinate_x',
-        'left_gaze_point_in_user_coordinate_y',
-        'left_gaze_point_in_user_coordinate_z', 'left_gaze_point_validity',
-        'left_pupil_diameter', 'left_gaze_pupil_validity',
-        'left_gaze_origin_in_user_coordinate_system_x',
-        'left_gaze_origin_in_user_coordinate_system_y',
-        'left_gaze_origin_in_user_coordinate_system_z',
-        'left_gaze_origin_in_trackbox_coordinate_system_x',
-        'left_gaze_origin_in_trackbox_coordinate_system_y',
-        'left_gaze_origin_in_trackbox_coordinate_system_z',
-        'left_gaze_origin_validity', 'right_gaze_point_on_display_area_x',
-        'right_gaze_point_on_display_area_y',
-        'right_gaze_point_in_user_coordinate_x',
-        'right_gaze_point_in_user_coordinate_y',
-        'right_gaze_point_in_user_coordinate_z', 'right_gaze_point_validity',
-        'right_pupil_diameter', 'right_gaze_pupil_validity',
-        'right_gaze_origin_in_user_coordinate_system_x',
-        'right_gaze_origin_in_user_coordinate_system_y',
-        'right_gaze_origin_in_user_coordinate_system_z',
-        'right_gaze_origin_in_trackbox_coordinate_system_x',
-        'right_gaze_origin_in_trackbox_coordinate_system_y',
-        'right_gaze_origin_in_trackbox_coordinate_system_z',
-        'right_gaze_origin_validity', 'right_gaze_point_pixel_x'
-        'right_gaze_point_pixel_y', 'left_gaze_point_pixel_x',
-        'left_gaze_point_pixel_y', 'test'
+        'dev_time_stamp', 'avg_x', 'avg_y', 'avg_pupil_dia', 'avg_eye_pos_x',
+        'avg_eye_pos_y', 'avg_eye_pos_z', 'avg_eye_dist', 'eye_valid',
+        'dev_timestamp', 'sys_time_stamp', 'l_disp_area_x', 'l_disp_area_y',
+        'l_user_x', 'l_user_y', 'l_user_z', 'l_valid', 'l_pupil_dia',
+        'l_pupil_valid', 'l_or_user_x', 'l_or_user_y', 'l_or_user_z',
+        'l_or_track_x', 'l_or_track_y', 'l_or_track_z', 'l_or_valid',
+        'r_disp_area_x', 'r_disp_area_y', 'r_user_x', 'r_user_y', 'r_user_z',
+        'r_valid', 'r_pupil_dia', 'r_pupil_valid', 'r_or_user_x',
+        'r_or_user_y', 'r_or_user_z', 'r_or_track_x', 'r_or_track_y',
+        'r_or_track_z', 'r_or_valid', 'r_pixel_x', 'r_pixel_y', 'l_pixel_x',
+        'l_pixel_y'
     ]
     for ch in eye_channels:
-        channels.append({'label': [ch], 'type': ['EYE'], 'unit': [None]})
-
+        channels.append({'label': [ch], 'type': ['misc'], 'unit': [None]})
     return channels
 
 
@@ -303,7 +288,6 @@ def _get_ch_info(stream):
             channels = _tobii_ch_info()
         elif not stream["info"]["desc"][0]["channels"]:
             channels = _b_alert_ch_info()
-
         else:
             channels = stream["info"]["desc"][0]["channels"][0]["channel"]
         for ch in channels:

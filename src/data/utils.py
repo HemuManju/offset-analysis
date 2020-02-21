@@ -1,4 +1,9 @@
+import collections
 import deepdish as dd
+
+
+def nested_dict():
+    return collections.defaultdict(nested_dict)
 
 
 def save_dataset(path, dataset, save):

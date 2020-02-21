@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data.extract_data import (extract_eeg_data, extract_individual_diff,
-                               extract_eye_data)
+from data.extract_data import (extract_eeg_data, extract_eye_data,
+                               extract_offset_data)
 from data.clean_data import clean_eeg_data
 from data.mne_write_edf import write_mne_to_edf
 from data.utils import save_dataset, read_dataset
@@ -25,7 +25,12 @@ from utils import skip_run
 config_path = Path(__file__).parents[1] / 'src/config.yml'
 config = yaml.load(open(str(config_path)), Loader=yaml.SafeLoader)
 
-with skip_run('run', 'Extract EEG data') as check, check():
+with skip_run('skip', 'Extract OFFSET data') as check, check():
+    offset_data = extract_offset_data(config)
+    save_path = Path(__file__).parents[1] / config['raw_offset_dataset']
+    save_dataset(str(save_path), offset_data, save=True)
+
+with skip_run('skip', 'Extract EEG data') as check, check():
     raw_eeg_data = extract_eeg_data(config)
     save_path = Path(__file__).parents[1] / config['raw_eeg_dataset']
     save_dataset(str(save_path), raw_eeg_data, save=True)

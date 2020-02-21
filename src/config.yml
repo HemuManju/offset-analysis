@@ -23,6 +23,7 @@ individual_diff: ['VS', 'MOT']
 raw_xdf_path: 'data/raw/'
 force_data_path: 'data/raw/force_data/'
 
+raw_offset_dataset: 'data/interim/raw_offset_exp_0_dataset.h5'
 raw_eeg_dataset: 'data/interim/raw_eeg_exp_0_dataset.h5'
 raw_eye_dataset: 'data/interim/raw_eye_exp_0_dataset.h5'
 clean_eeg_dataset: 'data/processed/clean_eeg_exp_0_dataset.h5'
