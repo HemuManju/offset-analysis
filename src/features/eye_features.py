@@ -14,7 +14,6 @@ def extract_eye_features(config):
         'S004': 'static_red_smoke',
         'S005': 'dynamic_red_smoke'
     }
-
     column_names = ['fixation']
     eye_data_frame = pd.DataFrame(np.empty((0, len(column_names))),
                                   columns=column_names)

@@ -61,23 +61,25 @@ def individual_features_analysis(config):
         individual_dataframe['complexity'] == 'dynamic_red_smoke']
 
     individual_subject_group.reset_index(inplace=True)
-    feature = 'vs'
+    individual_subject_group['completion_time'] = individual_subject_group[
+        'completion_time'] / individual_subject_group['distance']
+    feature = 'mot'
     y, X = dmatrices('completion_time ~' + feature,
                      data=individual_subject_group,
                      return_type='dataframe')
 
     # Statistica analysis
-    mod = sm.RLM(y / 60, X)  # Describe model
+    mod = sm.RLM(y, X)  # Describe model
     resrlm = mod.fit()  # Fit model
     print(resrlm.summary())
 
     plot_settings()
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111)
-    ax.plot(X[feature], y / 60, 'o')
+    ax.plot(X[feature], y, 'o')
     ax.plot(X[feature], resrlm.fittedvalues, 'g.-', label="RLM")
-    ax.set_xlabel('Multi object tracking score (range 0-1)')
-    ax.set_ylabel('Completion time (min)')
+    ax.set_xlabel('Multi-object tracking score (range 0-1)')
+    ax.set_ylabel('Displacement Normalised Completion time (min/m)')
     ax.set_title('Dynamic red team with smoke')
     ax.grid(True)
     plt.show()

@@ -23,10 +23,6 @@ from datetime import datetime
 import mne
 import os
 
-from pathlib import Path
-
-from .utils import read_dataset
-
 
 def write_edf(mne_raw, fname, picks=None, tmin=0, tmax=None, overwrite=False):
     """
@@ -111,44 +107,3 @@ def write_edf(mne_raw, fname, picks=None, tmin=0, tmax=None, overwrite=False):
     finally:
         f.close()
     return True
-
-
-"""
-This part of the code is added by Hemanth
-"""
-
-
-def write_mne_to_edf(config):
-    """This functions writes the mne epoch into b-alert redable .edf format
-    Parameters
-    ----------
-    config : yaml
-        The configuration file
-    """
-    read_path = Path(__file__).parents[2] / config['clean_eeg_dataset']
-    data = read_dataset(str(read_path))
-    for subject in data.keys():
-        for session in config['sessions']:
-
-            # Read the epoch data
-            eeg_data = data[subject][session]['clean_eeg']
-
-            # Convert the data to mne Raw format
-            raw_data = eeg_data.get_data().transpose(1, 0, 2).reshape(20, -1)
-            raw_info = eeg_data.info
-            raw_eeg = mne.io.RawArray(raw_data, raw_info)
-
-            # Save the file
-            subject_file = 'sub_OFS_' + subject
-            session_file = 'ses-' + session
-            edf_file = ''.join(
-                [subject, '11000_ses-', session, '_task-T1_run-001.edf'])
-            save_path = ''.join([
-                config['raw_xdf_path'], subject_file, '/', session_file,
-                '/b-alert/'
-            ])
-
-            # Make the directory if not present
-            if not os.path.isdir(save_path):
-                os.mkdir(save_path)
-            write_edf(raw_eeg, save_path + edf_file, overwrite=True)

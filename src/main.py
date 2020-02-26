@@ -1,25 +1,22 @@
 import yaml
 from pathlib import Path
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-from data.extract_data import (extract_eeg_data, extract_eye_data,
-                               extract_offset_data)
+from data.extract_data import extract_offset_data
 from data.clean_data import clean_eeg_data
-from data.mne_write_edf import write_mne_to_edf
+from data.b_alert_data import write_mne_to_b_alert_edf
 from data.utils import save_dataset, read_dataset
 
 from features.eeg_features import extract_cognitive_features
 from features.eye_features import extract_eye_features
-from features.offset_features import individual_features_with_time
+from features.game_features import (individual_features_with_time,
+                                    extract_game_features)
 
 from models.offset_analysis import (eeg_features_analysis,
                                     eye_features_analysis,
                                     individual_features_analysis)
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
-                                     plot_settings, eye_features_visualize)
+                                     eye_features_visualize)
 from visualization.epoch_visualize import topo_visualize
 
 from utils import skip_run
@@ -33,34 +30,14 @@ with skip_run('skip', 'Extract OFFSET data') as check, check():
     save_path = Path(__file__).parents[1] / config['raw_offset_dataset']
     save_dataset(str(save_path), offset_data, save=True)
 
-with skip_run('skip', 'Extract EEG data') as check, check():
-    raw_eeg_data = extract_eeg_data(config)
-    save_path = Path(__file__).parents[1] / config['raw_eeg_dataset']
-    save_dataset(str(save_path), raw_eeg_data, save=True)
-
 with skip_run('skip', 'Clean EEG data') as check, check():
     clean_dataset = clean_eeg_data(config['subjects'], config['sessions'],
                                    config)
     save_path = Path(__file__).parents[1] / config['clean_eeg_dataset']
     save_dataset(str(save_path), clean_dataset, save=True)
 
-with skip_run('skip', 'Save the EEG to B-alert format') as check, check():
-    write_mne_to_edf(config)
-
-with skip_run('skip', 'Extract Individual difference') as check, check():
-    individual_diff = extract_individual_diff(config)
-    print(np.mean(individual_diff, axis=0))
-    plot_settings()
-    plt.scatter(individual_diff[:, 0], individual_diff[:, 1], s=100)
-    plt.xlabel('Multi-object tracking task (% Correct)')
-    plt.ylabel('Visual searching task (% Correct)')
-    plt.tight_layout()
-    plt.show()
-
-with skip_run('skip', 'Extract Eye data') as check, check():
-    raw_eye_data = extract_eye_data(config)
-    save_path = Path(__file__).parents[1] / config['raw_eye_dataset']
-    save_dataset(str(save_path), raw_eye_data, save=True)
+with skip_run('run', 'Save the EEG to B-alert format') as check, check():
+    write_mne_to_b_alert_edf(config, save_data=True)
 
 with skip_run('skip', 'EEG feature extraction') as check, check():
     eeg_dataframe = extract_cognitive_features(config)
@@ -72,10 +49,18 @@ with skip_run('skip', 'Eye feature extraction') as check, check():
     save_path = Path(__file__).parents[1] / config['eye_features_path']
     eye_dataframe.to_hdf(str(save_path), key='eye_dataframe')
 
+with skip_run('skip', 'Game feature extraction') as check, check():
+    game_features = extract_game_features(config)
+    save_path = Path(__file__).parents[1] / config['game_features_path']
+    save_dataset(str(save_path), game_features, save=True)
+
 with skip_run('skip', 'EEG feature analysis') as check, check():
     eeg_features_analysis(config)
 
 with skip_run('skip', 'Eye feature analysis') as check, check():
+    eye_features_analysis(config)
+
+with skip_run('skip', 'Game feature analysis') as check, check():
     eye_features_analysis(config)
 
 with skip_run('skip', 'EEG feature visualization') as check, check():
@@ -99,5 +84,5 @@ with skip_run('skip', 'Indiv difference with time') as check, check():
     save_path = Path(__file__).parents[1] / config['individual_diff_path']
     individual_dataframe.to_hdf(str(save_path), key='individual_dataframe')
 
-with skip_run('run', 'Indiv difference analysis') as check, check():
+with skip_run('skip', 'Indiv difference analysis') as check, check():
     individual_features_analysis(config)
