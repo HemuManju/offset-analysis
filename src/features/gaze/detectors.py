@@ -39,6 +39,8 @@ __author__ = "Edwin Dalmaijer"
 
 import numpy
 
+from .gazeplotter import parse_fixations
+
 
 def blink_detection(x, y, time, missing=0.0, minlen=10):
     """Detects blinks, defined as a period of missing data that lasts for at
@@ -282,3 +284,10 @@ def saccade_detection(x,
             stop = True
 
     return Ssac, Esac
+
+
+def scan_path(fixations):
+    fix = parse_fixations(fixations)
+    path = numpy.array([fix['x'], fix['y']]).transpose()
+    path_length = numpy.linalg.norm(numpy.diff(path, axis=0), axis=1)
+    return numpy.nanmean(path_length)

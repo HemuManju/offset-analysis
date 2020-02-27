@@ -1,13 +1,18 @@
+import numpy
+
 from data.extract_data import read_xdf_eye_data
 
 from .gaze.detectors import (blink_detection, fixation_detection,
-                             saccade_detection)
+                             saccade_detection, scan_path)
 
 
 def _compute_eye_features(epochs, time_stamps):
     time_stamps = (time_stamps - time_stamps[0]) * 1000
+    eye_data = {}
+
     channels = [
-        'avg_pupil_dia', 'r_pixel_x', 'r_pixel_y', 'l_pixel_x', 'l_pixel_y'
+        'avg_pupil_dia', 'avg_pupil_dia', 'r_pixel_x', 'r_pixel_y',
+        'l_pixel_x', 'l_pixel_y'
     ]
     data = epochs.to_data_frame(picks=channels)
     data.fillna(0.0)
@@ -19,27 +24,30 @@ def _compute_eye_features(epochs, time_stamps):
     pos_x = data[['r_pixel_x', 'l_pixel_x']].mean(axis=1).values
     pos_y = data[['r_pixel_y', 'l_pixel_y']].mean(axis=1).values
 
-    # Get average of left and right eye
+    # Get the features
     _, blinks = blink_detection(pos_x, pos_y, time_stamps, minlen=5)
-    _, fixations = fixation_detection(pos_x, pos_y, time_stamps, mindur=100)
+    _, fixations = fixation_detection(pos_x, pos_y, time_stamps, mindur=50)
     _, saccades = saccade_detection(pos_x.astype(int), pos_y.astype(int),
                                     time_stamps)
+    pupil_size = numpy.mean(data['avg_pupil_dia'].values, axis=1)
+    scan_path_length = scan_path(fixations)
 
-    return blinks, fixations, saccades
+    # Append the dictionary
+    eye_data['blinks'] = blinks
+    eye_data['fixations'] = fixations
+    eye_data['saccades'] = saccades
+    eye_data['pupil_size'] = pupil_size
+    eye_data['scane_path_length'] = scan_path_length
+    eye_data['time_stamps'] = time_stamps
+
+    return eye_data
 
 
 def extract_eye_features(config, subject, session):
-    eye_data = {}
 
     # Read the eye data
     eye_epochs, time_stamps = read_xdf_eye_data(config, subject, session)
 
     # Calculate the features
-    blinks, fixations, saccades = _compute_eye_features(
-        eye_epochs, time_stamps)
-    eye_data['blinks'] = blinks
-    eye_data['fixations'] = fixations
-    eye_data['saccades'] = saccades
-    eye_data['time_stamps'] = time_stamps
-
+    eye_data = _compute_eye_features(eye_epochs, time_stamps)
     return eye_data

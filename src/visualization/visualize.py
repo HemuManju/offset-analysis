@@ -28,7 +28,7 @@ def image_sequence(config):
             ax[i].cla()
 
 
-def plot_settings():
+def _plot_settings():
     """Change the asthetics of the given figure (operators in place).
 
     Parameters
@@ -45,38 +45,28 @@ def plot_settings():
     return None
 
 
-def eeg_features_visualize(config):
+def _box_plots(models, dataframe, dependent, independent, axes):
+    _plot_settings()
+    feature_dataframe = dataframe[[independent, dependent]]
+    feature_dataframe.boxplot(by=independent, ax=axes)
+    plt.suptitle("")
+    return None
+
+
+def eeg_features_visualize(models, dataframe, features, independent):
 
     # Default plot settings
-    plot_settings()
-
-    # Load the dataframe
-    read_path = Path(__file__).parents[2] / config['eeg_features_path']
-    eeg_dataframe = pd.read_hdf(str(read_path), key='eeg_dataframe')
-
-    # Select the features
-    eeg_dataframe = eeg_dataframe[[
-        'prob_distraction', 'prob_low_eng', 'prob_high_eng',
-        'prob_ave_workload', 'complexity', 'subject'
-    ]]
+    _plot_settings()
 
     colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
-
-    # Group by complexity
-    eeg_complexity_group = eeg_dataframe.groupby(['complexity']).mean().T
-
     title = [
         'Distraction', 'Low Engagement', 'High Engagement',
         'Avg Mental Workload'
     ]
 
-    for i in range(4):
+    for i, feature in enumerate(features):
         fig, ax = plt.subplots(figsize=[10, 5])
-        eeg_complexity_group.iloc[i].plot(kind='bar',
-                                          rot=0,
-                                          color=colors,
-                                          edgecolor='k',
-                                          ax=ax)
+        _box_plots(models[i], dataframe, feature, independent, ax)
 
         ax.set_xticklabels([
             'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
@@ -84,39 +74,23 @@ def eeg_features_visualize(config):
         ])
         plt.ylabel('Probability')
         plt.xlabel('Complexities')
-        plt.ylim([0, 0.75])
         plt.title(title[i])
         plt.tight_layout()
     plt.show()
     return None
 
 
-def eye_features_visualize(config):
+def eye_features_visualize(models, dataframe, features, independent):
 
     # Default plot settings
-    plot_settings()
-
-    # Load the dataframe
-    read_path = Path(__file__).parents[2] / config['eye_features_path']
-    eye_dataframe = pd.read_hdf(str(read_path), key='eye_dataframe')
+    _plot_settings()
 
     colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
+    title = ['Fixation', 'Sacaddes']
 
-    # Group by complexity
-    eye_complexity_group = eye_dataframe.groupby(['complexity']).mean().T
-
-    title = [
-        'Distraction', 'Low Engagement', 'High Engagement',
-        'Avg Mental Workload'
-    ]
-
-    for i in range(4):
+    for i, feature in enumerate(features):
         fig, ax = plt.subplots(figsize=[10, 5])
-        eye_complexity_group.iloc[i].plot(kind='bar',
-                                          rot=0,
-                                          color=colors,
-                                          edgecolor='k',
-                                          ax=ax)
+        _box_plots(models[i], dataframe, feature, independent, ax)
 
         ax.set_xticklabels([
             'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
@@ -124,15 +98,15 @@ def eye_features_visualize(config):
         ])
         plt.ylabel('Probability')
         plt.xlabel('Complexities')
-        plt.ylim([0, 0.75])
         plt.title(title[i])
         plt.tight_layout()
     plt.show()
+    return None
 
 
 def animate_bar_plot(config, subject, outcome):
     # Default plot settings
-    plot_settings()
+    _plot_settings()
 
     # Load the dataframe
     read_path = Path(__file__).parents[2] / config['eeg_features_path']

@@ -8,12 +8,13 @@ from data.utils import save_dataset, read_dataset
 
 from features.offset_features import extract_offset_features
 
-from models.offset_analysis import (eeg_features_analysis,
-                                    eye_features_analysis,
-                                    individual_features_analysis)
+from models.eeg_analysis import eeg_features_analysis
+from models.eye_analysis import eye_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
                                      eye_features_visualize)
+from visualization.regression_visualize import box_plots
+
 from visualization.epoch_visualize import topo_visualize
 
 from utils import skip_run
@@ -37,24 +38,25 @@ with skip_run('skip', 'Save the EEG to B-alert format') as check, check():
     write_mne_to_b_alert_edf(config, save_data=True)
 
 with skip_run('skip', 'OFFSET feature extraction') as check, check():
-    offset_featuers = extract_offset_features(config)
+    offset_features = extract_offset_features(config)
     save_path = Path(__file__).parents[1] / config['offset_features_path']
-    save_dataset(str(save_path), offset_data, save=True)
+    save_dataset(str(save_path), offset_features, save=True)
 
 with skip_run('skip', 'EEG feature analysis') as check, check():
-    eeg_features_analysis(config)
+    features = [
+        'prob_distraction', 'prob_low_eng', 'prob_high_eng',
+        'prob_ave_workload'
+    ]
+    models, eeg_subject_group = eeg_features_analysis(config, features)
+    eeg_features_visualize(models, eeg_subject_group, features, 'complexity')
 
 with skip_run('skip', 'Eye feature analysis') as check, check():
-    eye_features_analysis(config)
+    features = ['fixations', 'saccades']
+    models, eye_subject_group = eye_features_analysis(config, features)
+    eye_features_visualize(models, eye_subject_group, features, 'complexity')
 
 with skip_run('skip', 'Game feature analysis') as check, check():
     eye_features_analysis(config)
-
-with skip_run('skip', 'EEG feature visualization') as check, check():
-    eeg_features_visualize(config)
-
-with skip_run('skip', 'Eye feature visualization') as check, check():
-    eye_features_visualize(config)
 
 with skip_run('skip', 'EEG feature animation') as check, check():
     subject = config['subjects'][7]
