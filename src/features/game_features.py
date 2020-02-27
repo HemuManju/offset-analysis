@@ -1,62 +1,9 @@
-import collections
-from pathlib import Path
-
 import numpy as np
-import pandas as pd
-import deepdish as dd
-
 from scipy.spatial import distance
 
+from data.extract_data import read_xdf_game_data
+
 from .utils import findkeys
-from data.utils import read_dataset
-
-
-def individual_features_with_time(config):
-    session_name = {
-        'S001': 'baseline',
-        'S002': 'static_red',
-        'S003': 'dynamic_red',
-        'S004': 'static_red_smoke',
-        'S005': 'dynamic_red_smoke'
-    }
-    column_names = [
-        'mot', 'vs', 'completion_time', 'subject', 'complexity', 'distance'
-    ]
-    individual_diff_df = pd.DataFrame(np.empty((0, len(column_names))),
-                                      columns=column_names)
-
-    # Game data
-    read_path = Path(__file__).parents[2] / config['game_features_path']
-    game_data = read_dataset(str(read_path))
-
-    # Read path
-    read_path = Path(__file__).parents[2] / config['raw_offset_dataset']
-
-    # Read the file
-    df = []
-    for subject in config['subjects']:
-        individual_diff = dd.io.load(str(read_path),
-                                     group='/sub_OFS_' + subject +
-                                     '/individual_difference/')
-        for session in config['sessions']:
-            group = '/sub_OFS_' + '/'.join(
-                [subject, session, 'eeg', 'time_stamps'])
-            eeg_time = dd.io.load(str(read_path), group=group)
-            duration = eeg_time[-1] - eeg_time[0]
-            temp_data = game_data['sub_OFS_' + subject][session]['data']
-            distance = np.linalg.norm(temp_data['selected_node_pos'][-1])
-
-            data = [
-                individual_diff['mot'], individual_diff['vs'], duration,
-                subject, session_name[session], distance
-            ]
-            df.append(data)
-
-    individual_diff_df = pd.DataFrame(df, columns=column_names)
-
-    # Clean before return
-    individual_diff_df.dropna()
-    return individual_diff_df
 
 
 def _initial_nodes_setup(config):
@@ -101,37 +48,34 @@ def _get_selected_platoons(game_data):
 
 
 def _get_casualities(game_data):
-    selected_list = list(findkeys(game_data, 'casualities'))
-    print(selected_list)
-    return None
+    causalities = []
+    for i in range(3):
+        # Extract UAV and UGV group
+        uav_group = list(findkeys(game_data, 'uav_p_' + str(i + 1)))
+        uav_casulaties = list(findkeys(uav_group, 'casualities'))
+
+        causalities.append(len(uav_casulaties[-1]))
+
+        ugv_group = list(findkeys(game_data, 'ugv_p_' + str(i + 1)))
+        ugv_casulaties = list(findkeys(ugv_group, 'casualities'))
+
+        causalities.append(len(ugv_casulaties[-1]))
+    return causalities
 
 
-def _calculate_game_features(game_data, node_position):
-    data = {}
-    node_index, node_pos = _get_selected_node(game_data, node_position)
-    data['selected_node'] = node_index
-    data['selected_node_pos'] = node_pos
-    data['platoon_selected'] = _get_selected_platoons(game_data)
-    data['pause'] = list(findkeys(game_data, 'pause'))
-    data['resume_state'] = list(findkeys(game_data, 'resume'))
-    return data
+def extract_game_features(config, subject, session):
+    game_data = {}
+    node_position = _initial_nodes_setup(config)
 
+    game_epochs, time_stamps = read_xdf_game_data(config, subject, session)
 
-def extract_game_features(config):
-    position_data = _initial_nodes_setup(config)
-    game_dataset = {}
+    node_index, node_pos = _get_selected_node(game_epochs, node_position)
+    game_data['selected_node'] = node_index
+    game_data['casualities'] = _get_casualities(game_epochs)
+    game_data['selected_node_pos'] = node_pos
+    game_data['platoon_selected'] = _get_selected_platoons(game_epochs)
+    game_data['pause'] = list(findkeys(game_epochs, 'pause'))
+    game_data['resume_state'] = list(findkeys(game_epochs, 'resume'))
+    game_data['time_stamps'] = time_stamps
 
-    # Reading path
-    read_path = Path(__file__).parents[2] / config['raw_offset_dataset']
-
-    for subject in config['subjects']:
-        data = collections.defaultdict(dict)
-        for session in config['sessions']:
-            # Read only the game data
-            group = '/sub_OFS_' + '/'.join([subject, session, 'game'])
-            game_data = dd.io.load(str(read_path), group=group)
-            data[session]['data'] = _calculate_game_features(
-                game_data['data'], position_data)
-            data[session]['time_stamps'] = game_data['time_stamps']
-        game_dataset['sub_OFS_' + subject] = data
-    return game_dataset
+    return game_data

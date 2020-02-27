@@ -1,3 +1,6 @@
+import collections
+
+
 def findkeys(node, kv):
     if isinstance(node, list):
         for i in node:
@@ -9,3 +12,7 @@ def findkeys(node, kv):
         for j in node.values():
             for x in findkeys(j, kv):
                 yield x
+
+
+def nested_dict():
+    return collections.defaultdict(nested_dict)

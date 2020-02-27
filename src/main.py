@@ -6,10 +6,7 @@ from data.clean_data import clean_eeg_data
 from data.b_alert_data import write_mne_to_b_alert_edf
 from data.utils import save_dataset, read_dataset
 
-from features.eeg_features import extract_cognitive_features
-from features.eye_features import extract_eye_features
-from features.game_features import (individual_features_with_time,
-                                    extract_game_features)
+from features.offset_features import extract_offset_features
 
 from models.offset_analysis import (eeg_features_analysis,
                                     eye_features_analysis,
@@ -36,23 +33,13 @@ with skip_run('skip', 'Clean EEG data') as check, check():
     save_path = Path(__file__).parents[1] / config['clean_eeg_dataset']
     save_dataset(str(save_path), clean_dataset, save=True)
 
-with skip_run('run', 'Save the EEG to B-alert format') as check, check():
+with skip_run('skip', 'Save the EEG to B-alert format') as check, check():
     write_mne_to_b_alert_edf(config, save_data=True)
 
-with skip_run('skip', 'EEG feature extraction') as check, check():
-    eeg_dataframe = extract_cognitive_features(config)
-    save_path = Path(__file__).parents[1] / config['eeg_features_path']
-    eeg_dataframe.to_hdf(str(save_path), key='eeg_dataframe')
-
-with skip_run('skip', 'Eye feature extraction') as check, check():
-    eye_dataframe = extract_eye_features(config)
-    save_path = Path(__file__).parents[1] / config['eye_features_path']
-    eye_dataframe.to_hdf(str(save_path), key='eye_dataframe')
-
-with skip_run('skip', 'Game feature extraction') as check, check():
-    game_features = extract_game_features(config)
-    save_path = Path(__file__).parents[1] / config['game_features_path']
-    save_dataset(str(save_path), game_features, save=True)
+with skip_run('skip', 'OFFSET feature extraction') as check, check():
+    offset_featuers = extract_offset_features(config)
+    save_path = Path(__file__).parents[1] / config['offset_features_path']
+    save_dataset(str(save_path), offset_data, save=True)
 
 with skip_run('skip', 'EEG feature analysis') as check, check():
     eeg_features_analysis(config)
@@ -78,11 +65,6 @@ with skip_run('skip', 'EEG topoplot visualize') as check, check():
     data = read_dataset(str(read_path))
     epochs = data['sub_OFS_2008']['S005']['eeg'].load_data()
     topo_visualize(epochs, config)
-
-with skip_run('skip', 'Indiv difference with time') as check, check():
-    individual_dataframe = individual_features_with_time(config)
-    save_path = Path(__file__).parents[1] / config['individual_diff_path']
-    individual_dataframe.to_hdf(str(save_path), key='individual_dataframe')
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():
     individual_features_analysis(config)

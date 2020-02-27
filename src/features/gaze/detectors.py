@@ -88,6 +88,7 @@ def blink_detection(x, y, time, missing=0.0, minlen=10):
         # append only if the duration in samples is equal to or greater than
         # the minimal duration
         if e - s >= minlen:
+
             # add starting time
             Sblk.append([time[s]])
             # add ending time
@@ -146,6 +147,7 @@ def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
         dist = 0.0
         if squared_distance > 0:
             dist = squared_distance**0.5
+
         # check if the next coordinate is below maximal distance
         if dist <= maxdist and not fixstart:
             # start a new fixation

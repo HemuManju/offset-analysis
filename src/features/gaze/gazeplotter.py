@@ -33,7 +33,8 @@ import os
 # external
 import numpy
 import matplotlib
-from matplotlib import pyplot, image
+from matplotlib import pyplot
+from PIL import Image
 
 # # # # #
 # LOOK
@@ -131,7 +132,7 @@ def draw_fixations(fixations,
 
     # FINISH PLOT
     # invert the y axis, as (0,0) is top left on a display
-    ax.invert_yaxis()
+    # ax.invert_yaxis()
     # save the figure if a file name was provided
     if savefilename is not None:
         fig.savefig(savefilename)
@@ -141,6 +142,8 @@ def draw_fixations(fixations,
 
 def draw_heatmap(fixations,
                  dispsize,
+                 ax,
+                 image,
                  imagefile=None,
                  durationweight=True,
                  alpha=0.5,
@@ -183,7 +186,7 @@ def draw_heatmap(fixations,
     fix = parse_fixations(fixations)
 
     # IMAGE
-    fig, ax = draw_display(dispsize, imagefile=imagefile)
+    # fig, ax = draw_display(dispsize, imagefile=imagefile)
 
     # HEATMAP
     # Gaussian
@@ -191,15 +194,15 @@ def draw_heatmap(fixations,
     gsdwh = gwh / 6
     gaus = gaussian(gwh, gsdwh)
     # matrix of zeroes
-    strt = gwh / 2
-    heatmapsize = dispsize[1] + 2 * strt, dispsize[0] + 2 * strt
+    strt = int(gwh / 2)
+    heatmapsize = int(dispsize[1] + 2 * strt), int(dispsize[0] + 2 * strt)
     heatmap = numpy.zeros(heatmapsize, dtype=float)
     # create heatmap
     for i in range(0, len(fix['dur'])):
         # get x and y coordinates
         # x and y - indexes of heatmap array. must be integers
-        x = strt + int(fix['x'][i]) - int(gwh / 2)
-        y = strt + int(fix['y'][i]) - int(gwh / 2)
+        x = int(strt) + int(fix['x'][i]) - int(gwh / 2)
+        y = int(strt) + int(fix['y'][i]) - int(gwh / 2)
         # correct Gaussian size if either coordinate falls outside of
         # display boundaries
         if (not 0 < x < dispsize[0]) or (not 0 < y < dispsize[1]):
@@ -232,16 +235,19 @@ def draw_heatmap(fixations,
     lowbound = numpy.mean(heatmap[heatmap > 0])
     heatmap[heatmap < lowbound] = numpy.NaN
     # draw heatmap on top of image
+    ax.imshow(image)
     ax.imshow(heatmap, cmap='jet', alpha=alpha)
+    pyplot.pause(0.001)
+    ax.cla()
 
     # FINISH PLOT
     # invert the y axis, as (0,0) is top left on a display
-    ax.invert_yaxis()
+    # ax.invert_yaxis()
     # save the figure if a file name was provided
-    if savefilename is not None:
-        fig.savefig(savefilename)
+    # if savefilename is not None:
+    #     fig.savefig(savefilename)
 
-    return fig
+    return None
 
 
 def draw_raw(x, y, dispsize, imagefile=None, savefilename=None):
@@ -423,19 +429,23 @@ def draw_display(dispsize, imagefile=None):
                 "ERROR in draw_display: imagefile not found at '%s'" %
                 imagefile)
         # load image
-        img = image.imread(imagefile)
+        # img = image.imread(imagefile)
+        img = Image.open(imagefile)
+        img = img.resize((1500, 750))
+        img = numpy.array(img)
         # flip image over the horizontal axis
         # (do not do so on Windows, as the image appears to be loaded with
         # the correct side up there; what's up with that? :/)
         if not os.name == 'nt':
-            img = numpy.flipud(img)
+            # img = numpy.flipud(img) # NOTE: Need not do this in mac
+            pass
         # width and height of the image
         w, h = len(img[0]), len(img)
         # x and y position of the image on the display
-        x = dispsize[0] / 2 - w / 2
-        y = dispsize[1] / 2 - h / 2
+        x = int(dispsize[0] / 2 - w / 2)
+        y = int(dispsize[1] / 2 - h / 2)
         # draw the image on the screen
-        screen[y:y + h, x:x + w, :] += img
+        screen[y:y + h, x:x + w, :] += img[:, :, 0:3]
     # dots per inch
     dpi = 100.0
     # determine the figure size in inches
@@ -447,7 +457,7 @@ def draw_display(dispsize, imagefile=None):
     fig.add_axes(ax)
     # plot display
     ax.axis([0, dispsize[0], 0, dispsize[1]])
-    ax.imshow(screen)  # origin='upper')
+    ax.imshow(img, origin='upper')
 
     return fig, ax
 

@@ -28,6 +28,7 @@ clean_eeg_dataset: 'data/processed/clean_eeg_exp_0_dataset.h5'
 eeg_features_path: 'data/processed/eeg_features_exp_0_dataframe.h5'
 eye_features_path: 'data/processed/eye_features_exp_0_dataframe.h5'
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
+offset_features_path: 'data/processed/offset_features_exp_0_dataframe.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
 image_save_path: 'data/processed/image_data/'
 ##---------------------------------------------------------------------##

@@ -1,40 +1,45 @@
-from pathlib import Path
+from data.extract_data import read_xdf_eye_data
 
-import numpy as np
-import pandas as pd
-
-import deepdish as dd
+from .gaze.detectors import (blink_detection, fixation_detection,
+                             saccade_detection)
 
 
-def extract_eye_features(config):
-    session_name = {
-        'S001': 'baseline',
-        'S002': 'static_red',
-        'S003': 'dynamic_red',
-        'S004': 'static_red_smoke',
-        'S005': 'dynamic_red_smoke'
-    }
-    column_names = ['fixation']
-    eye_data_frame = pd.DataFrame(np.empty((0, len(column_names))),
-                                  columns=column_names)
+def _compute_eye_features(epochs, time_stamps):
+    time_stamps = (time_stamps - time_stamps[0]) * 1000
+    channels = [
+        'avg_pupil_dia', 'r_pixel_x', 'r_pixel_y', 'l_pixel_x', 'l_pixel_y'
+    ]
+    data = epochs.to_data_frame(picks=channels)
+    data.fillna(0.0)
 
-    read_path = Path(__file__).parents[2] / config['raw_eye_dataset']
-    all_data = dd.io.load(read_path)
+    # Verify the length of data
+    assert data.shape[0] == len(time_stamps), "Data are not of same length"
 
-    # Read the file
-    for subject in ['2000', '2001', '2002', '2003', '2004', '2005']:
-        for session in config['sessions']:
-            eye_data = all_data['sub_OFS_' + subject][session]['eye']
-            df = pd.DataFrame(eye_data, columns=column_names)
-            # Add more information
-            df['subject'] = subject
-            df['complexity'] = session_name[session]
-            eye_data_frame = pd.concat([eye_data_frame, df],
-                                       ignore_index=True,
-                                       sort=False)
+    # Get x and y position
+    pos_x = data[['r_pixel_x', 'l_pixel_x']].mean(axis=1).values
+    pos_y = data[['r_pixel_y', 'l_pixel_y']].mean(axis=1).values
 
-    # Clean before return
-    eye_data_frame.dropna()
-    eye_data_frame = eye_data_frame[~(eye_data_frame == -99999).any(axis=1)]
+    # Get average of left and right eye
+    _, blinks = blink_detection(pos_x, pos_y, time_stamps, minlen=5)
+    _, fixations = fixation_detection(pos_x, pos_y, time_stamps, mindur=100)
+    _, saccades = saccade_detection(pos_x.astype(int), pos_y.astype(int),
+                                    time_stamps)
 
-    return eye_data_frame
+    return blinks, fixations, saccades
+
+
+def extract_eye_features(config, subject, session):
+    eye_data = {}
+
+    # Read the eye data
+    eye_epochs, time_stamps = read_xdf_eye_data(config, subject, session)
+
+    # Calculate the features
+    blinks, fixations, saccades = _compute_eye_features(
+        eye_epochs, time_stamps)
+    eye_data['blinks'] = blinks
+    eye_data['fixations'] = fixations
+    eye_data['saccades'] = saccades
+    eye_data['time_stamps'] = time_stamps
+
+    return eye_data
