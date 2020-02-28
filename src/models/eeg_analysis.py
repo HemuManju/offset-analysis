@@ -21,7 +21,7 @@ def _construct_eeg_data(config, save_dataframe):
 
     for subject in config['subjects']:
         for session in config['sessions']:
-            raw_data = data['sub_OFS_' + subject][session]['eeg_features']
+            raw_data = data['sub-OFS_' + subject][session]['eeg_features']
             temp_df = pd.DataFrame.from_dict(raw_data)
 
             # Add additional information

@@ -145,7 +145,7 @@ def clean_eeg_data(subjects, sessions, config):
             print(subject, session)
 
             # Read only the eeg data
-            group = '/sub_OFS_' + '/'.join([subject, session, 'eeg'])
+            group = '/sub-OFS_' + '/'.join([subject, session, 'eeg'])
             eeg_data = dd.io.load(str(read_path), group=group)
             raw_eeg = eeg_data['data']
             time_stamps = eeg_data['time_stamps']
@@ -159,5 +159,5 @@ def clean_eeg_data(subjects, sessions, config):
             data[session]['ica'] = ica
             data[session]['time_stamps'] = time_stamps
 
-        cleaned_eeg_dataset['sub_OFS_' + subject] = data
+        cleaned_eeg_dataset['sub-OFS_' + subject] = data
     return cleaned_eeg_dataset

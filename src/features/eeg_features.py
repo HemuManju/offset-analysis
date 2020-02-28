@@ -9,7 +9,7 @@ def extract_b_alert_features(config, subject, session):
     ]
 
     # Read the file
-    subject_file = 'sub_OFS_' + subject
+    subject_file = 'sub-OFS_' + subject
     session_file = 'ses-' + session
     csv_file = ''.join([
         subject, '11000_ses-', session, '_task-T1_run-001.Classification.csv'

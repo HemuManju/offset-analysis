@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import pandas as pd
 
-import seaborn as sbs
+import seaborn as sns
 
 
 def image_sequence(config):
@@ -36,38 +36,40 @@ def _plot_settings():
     ax : matplotlib ax object
 
     """
-
-    sbs.set_style("whitegrid")
     plt.rcParams.update({'font.family': "Arial"})
-    plt.rcParams.update({'font.size': 16})
+    plt.rcParams.update({'font.size': 14})
     plt.rcParams['axes.labelweight'] = 'bold'
+    plt.rcParams['pdf.fonttype'] = 42
+    plt.rc('axes', axisbelow=True)
+    sns.axes_style("ticks")
 
     return None
 
 
 def _box_plots(models, dataframe, dependent, independent, axes):
-    _plot_settings()
     feature_dataframe = dataframe[[independent, dependent]]
-    feature_dataframe.boxplot(by=independent, ax=axes)
+    sns.boxplot(x=independent,
+                y=dependent,
+                data=feature_dataframe,
+                ax=axes,
+                width=0.45)
     plt.suptitle("")
     return None
 
 
 def eeg_features_visualize(models, dataframe, features, independent):
 
-    # Default plot settings
-    _plot_settings()
-
-    colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
+    # colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
     title = [
         'Distraction', 'Low Engagement', 'High Engagement',
         'Avg Mental Workload'
     ]
 
+    _plot_settings()
     for i, feature in enumerate(features):
-        fig, ax = plt.subplots(figsize=[10, 5])
-        _box_plots(models[i], dataframe, feature, independent, ax)
+        fig, ax = plt.subplots(figsize=[8, 5])
 
+        _box_plots(models[i], dataframe, feature, independent, ax)
         ax.set_xticklabels([
             'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
             'Static red\n team', 'Static red\n team with smoke'
@@ -75,7 +77,9 @@ def eeg_features_visualize(models, dataframe, features, independent):
         plt.ylabel('Probability')
         plt.xlabel('Complexities')
         plt.title(title[i])
-        plt.tight_layout()
+        plt.grid(True)
+        plt.tight_layout(pad=0)
+
     plt.show()
     return None
 
@@ -85,13 +89,14 @@ def eye_features_visualize(models, dataframe, features, independent):
     # Default plot settings
     _plot_settings()
 
-    colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
-    title = ['Fixation', 'Sacaddes']
+    # colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
+    title = [
+        'Blinks', 'Fixations', 'Pupil Size', 'Saccades', 'Scan Path Length'
+    ]
 
     for i, feature in enumerate(features):
-        fig, ax = plt.subplots(figsize=[10, 5])
+        fig, ax = plt.subplots(figsize=[8, 5])
         _box_plots(models[i], dataframe, feature, independent, ax)
-
         ax.set_xticklabels([
             'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
             'Static red\n team', 'Static red\n team with smoke'
@@ -99,7 +104,8 @@ def eye_features_visualize(models, dataframe, features, independent):
         plt.ylabel('Probability')
         plt.xlabel('Complexities')
         plt.title(title[i])
-        plt.tight_layout()
+        plt.grid(True)
+        plt.tight_layout(pad=0)
     plt.show()
     return None
 

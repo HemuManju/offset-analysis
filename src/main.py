@@ -34,7 +34,7 @@ with skip_run('skip', 'Clean EEG data') as check, check():
     save_path = Path(__file__).parents[1] / config['clean_eeg_dataset']
     save_dataset(str(save_path), clean_dataset, save=True)
 
-with skip_run('skip', 'Save the EEG to B-alert format') as check, check():
+with skip_run('run', 'Save the EEG to B-alert format') as check, check():
     write_mne_to_b_alert_edf(config, save_data=True)
 
 with skip_run('skip', 'OFFSET feature extraction') as check, check():
@@ -51,7 +51,9 @@ with skip_run('skip', 'EEG feature analysis') as check, check():
     eeg_features_visualize(models, eeg_subject_group, features, 'complexity')
 
 with skip_run('skip', 'Eye feature analysis') as check, check():
-    features = ['fixations', 'saccades']
+    features = [
+        'blinks', 'fixations', 'pupil_size', 'saccades', 'scane_path_length'
+    ]
     models, eye_subject_group = eye_features_analysis(config, features)
     eye_features_visualize(models, eye_subject_group, features, 'complexity')
 
@@ -65,7 +67,7 @@ with skip_run('skip', 'EEG feature animation') as check, check():
 with skip_run('skip', 'EEG topoplot visualize') as check, check():
     read_path = Path(__file__).parents[1] / config['raw_eeg_dataset']
     data = read_dataset(str(read_path))
-    epochs = data['sub_OFS_2008']['S005']['eeg'].load_data()
+    epochs = data['sub-OFS_2008']['S005']['eeg'].load_data()
     topo_visualize(epochs, config)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():

@@ -11,10 +11,10 @@ from .utils import nested_dict
 
 def read_xdf_eeg_data(config, subject, session):
     # Parameters
-    subject_file = 'sub_OFS_' + subject
+    subject_file = 'sub-OFS_' + subject
     session_file = 'ses-' + session
     xdf_file = ''.join(
-        ['sub_OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
+        ['sub-OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
 
     # Read paths
     read_path = config[
@@ -25,10 +25,10 @@ def read_xdf_eeg_data(config, subject, session):
 
 def read_xdf_eye_data(config, subject, session):
     # Parameters
-    subject_file = 'sub_OFS_' + subject
+    subject_file = 'sub-OFS_' + subject
     session_file = 'ses-' + session
     xdf_file = ''.join(
-        ['sub_OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
+        ['sub-OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
 
     # Read paths
     read_path = config[
@@ -43,7 +43,7 @@ def read_individual_diff(config, subject):
 
     for task in config['individual_diff']:
         # Save the file
-        subject_file = 'sub_OFS_' + subject
+        subject_file = 'sub-OFS_' + subject
         read_path = ''.join([
             config['raw_xdf_path'], subject_file, '/', task, '/', task,
             '_OFS_', subject, '.csv'
@@ -60,10 +60,10 @@ def read_individual_diff(config, subject):
 
 def read_xdf_game_data(config, subject, session):
     # Parameters
-    subject_file = 'sub_OFS_' + subject
+    subject_file = 'sub-OFS_' + subject
     session_file = 'ses-' + session
     xdf_file = ''.join(
-        ['sub_OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
+        ['sub-OFS_', subject, '_ses-', session, '_task-T1_run-001.xdf'])
 
     # Read paths
     read_path = config[
@@ -108,5 +108,5 @@ def extract_offset_data(config):
         data['individual_difference'] = indivdual_diff
 
         # Store in the higher level dictionary
-        subjects_data['sub_OFS_' + subject] = data
+        subjects_data['sub-OFS_' + subject] = data
     return subjects_data

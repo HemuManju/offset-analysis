@@ -21,9 +21,10 @@ def _construct_eye_data(config, save_dataframe):
 
     for subject in config['subjects']:
         for session in config['sessions']:
-            raw_data = data['sub_OFS_' + subject][session]['eye_features']
+            raw_data = data['sub-OFS_' + subject][session]['eye_features']
             # Need to orient and transpose,
             # because the data are of not same length
+            raw_data['scane_path_length'] = [raw_data['scane_path_length']]
             temp_df = pd.DataFrame.from_dict(raw_data,
                                              orient='index').transpose()
             # Add additional information
@@ -53,10 +54,10 @@ def eye_features_analysis(config, features):
 
     # Select the features
     eye_dataframe = eye_dataframe[[
-        'fixations', 'saccades', 'complexity', 'subject'
+        'blinks', 'fixations', 'pupil_size', 'saccades', 'scane_path_length',
+        'complexity', 'subject'
     ]]
-    eye_subject_group = eye_dataframe.groupby(['subject',
-                                               'complexity']).count()
+    eye_subject_group = eye_dataframe.groupby(['subject', 'complexity']).mean()
     eye_subject_group.reset_index(inplace=True)
 
     models = []

@@ -27,6 +27,6 @@ def extract_offset_features(config):
             features[session]['game_features'] = extract_game_features(
                 config, subject, session)
 
-        offset_features['sub_OFS_' + subject] = features
+        offset_features['sub-OFS_' + subject] = features
 
     return offset_features

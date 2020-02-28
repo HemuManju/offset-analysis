@@ -90,7 +90,7 @@ def write_mne_to_b_alert_edf(config, save_data):
             decon_eeg = decontaminate_eeg(raw_eeg, config)
 
             # Save the file
-            subject_file = 'sub_OFS_' + subject
+            subject_file = 'sub-OFS_' + subject
             session_file = 'ses-' + session
             edf_file = ''.join(
                 [subject, '11000_ses-', session, '_task-T1_run-001.edf'])
