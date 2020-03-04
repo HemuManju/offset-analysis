@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy
 import deepdish as dd
 import pandas as pd
 
@@ -24,7 +25,12 @@ def _construct_eye_data(config, save_dataframe):
             raw_data = data['sub-OFS_' + subject][session]['eye_features']
             # Need to orient and transpose,
             # because the data are of not same length
-            raw_data['scane_path_length'] = [raw_data['scane_path_length']]
+            raw_data['n_fixations'] = [raw_data['n_fixations']]
+            raw_data['n_saccades'] = [raw_data['n_saccades']]
+            raw_data['avg_pupil_size'] = [
+                numpy.nanmean(raw_data['pupil_size'])
+            ]
+
             temp_df = pd.DataFrame.from_dict(raw_data,
                                              orient='index').transpose()
             # Add additional information
@@ -53,11 +59,11 @@ def eye_features_analysis(config, features):
         eye_dataframe = _construct_eye_data(config, save_dataframe=True)
 
     # Select the features
-    eye_dataframe = eye_dataframe[[
-        'blinks', 'fixations', 'pupil_size', 'saccades', 'scane_path_length',
-        'complexity', 'subject'
-    ]]
-    eye_subject_group = eye_dataframe.groupby(['subject', 'complexity']).mean()
+    eye_dataframe = eye_dataframe[features + ['complexity', 'subject']]
+    eye_dataframe.dropna(inplace=True)
+    eye_subject_group = eye_dataframe.groupby(['subject',
+                                               'complexity']).count()
+
     eye_subject_group.reset_index(inplace=True)
 
     models = []

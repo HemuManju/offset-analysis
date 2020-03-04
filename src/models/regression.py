@@ -1,12 +1,11 @@
-import statsmodels.api as sm
-from patsy import dmatrices
+import statsmodels.formula.api as smf
 
 
 def ols_regression(independent, dependent, dataframe):
     formula = ''.join([dependent, '~', independent])
-    y, X = dmatrices(formula, data=dataframe, return_type='dataframe')
 
     # Statistica analysis
-    mod = sm.OLS(y, X)  # Describe model
+    mod = smf.ols(formula, data=dataframe)  # Describe model
     res = mod.fit()  # Fit model
+    print(res.summary())
     return res

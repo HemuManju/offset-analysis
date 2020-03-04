@@ -15,6 +15,7 @@ def extract_offset_features(config):
             config, subject)
 
         for session in config['sessions']:
+            print(subject, session)
             # Read eye features
             features[session]['eye_features'] = extract_eye_features(
                 config, subject, session)

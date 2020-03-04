@@ -2,8 +2,7 @@ import numpy as np
 from scipy.spatial import distance
 
 from data.extract_data import read_xdf_game_data
-
-from .utils import findkeys
+from .utils import findkeys, _time_kd_tree
 
 
 def _initial_nodes_setup(config):
@@ -19,8 +18,8 @@ def _initial_nodes_setup(config):
     return position_data
 
 
-def _get_selected_node(game_data, node_position):
-    user_input = list(findkeys(game_data, 'user_input'))
+def _get_selected_node(game_epochs, node_position):
+    user_input = list(findkeys(game_epochs, 'user_input'))
     target_pos = list(findkeys(user_input, 'target_pos'))
     node_index = []
     node_pos = []
@@ -37,8 +36,8 @@ def _get_selected_node(game_data, node_position):
     return node_index, node_pos
 
 
-def _get_selected_platoons(game_data):
-    selected_list = list(findkeys(game_data, 'selected'))
+def _get_selected_platoons(game_epochs):
+    selected_list = list(findkeys(game_epochs, 'selected'))
     selection_key = []
     for i, selected in enumerate(selected_list):
         if selected:
@@ -47,19 +46,37 @@ def _get_selected_platoons(game_data):
     return selection_key
 
 
-def _get_casualities(game_data):
+def _get_map_pos(game_epochs):
+    map_pos = list(findkeys(game_epochs, 'map_pos'))
+    return map_pos
+
+
+def _get_states(game_epochs, complexity):
+    if complexity:
+        states = list(findkeys(game_epochs, 'complexity_states'))
+    else:
+        states = list(findkeys(game_epochs, 'states'))
+    return states
+
+
+def _get_casualities(game_epochs):
     causalities = []
-    for i in range(3):
-        # Extract UAV and UGV group
-        uav_group = list(findkeys(game_data, 'uav_p_' + str(i + 1)))
-        uav_casulaties = list(findkeys(uav_group, 'casualities'))
+    states = list(findkeys(game_epochs, 'state'))
+    if states:
+        for i in range(3):
+            # Extract UAV and UGV group
+            uav_group = list(findkeys(states, 'uav_p_' + str(i + 1)))
+            uav_casulaties = list(findkeys(uav_group, 'casualities'))
 
-        causalities.append(len(uav_casulaties[-1]))
+            causalities.append(len(uav_casulaties[-1]))
 
-        ugv_group = list(findkeys(game_data, 'ugv_p_' + str(i + 1)))
-        ugv_casulaties = list(findkeys(ugv_group, 'casualities'))
+            ugv_group = list(findkeys(states, 'ugv_p_' + str(i + 1)))
+            ugv_casulaties = list(findkeys(ugv_group, 'casualities'))
 
-        causalities.append(len(ugv_casulaties[-1]))
+            causalities.append(len(ugv_casulaties[-1]))
+    else:
+        causalities = [0] * 6  # 3 UGV and 3 UAV
+    print(causalities)
     return causalities
 
 
@@ -67,6 +84,7 @@ def extract_game_features(config, subject, session):
     game_data = {}
     node_position = _initial_nodes_setup(config)
 
+    # Read the game epochs
     game_epochs, time_stamps = read_xdf_game_data(config, subject, session)
 
     node_index, node_pos = _get_selected_node(game_epochs, node_position)
@@ -77,5 +95,9 @@ def extract_game_features(config, subject, session):
     game_data['pause'] = list(findkeys(game_epochs, 'pause'))
     game_data['resume_state'] = list(findkeys(game_epochs, 'resume'))
     game_data['time_stamps'] = time_stamps
+    game_data['map_pos'] = _get_map_pos(game_epochs)
+    game_data['states'] = _get_states(game_epochs, complexity=False)
+    game_data['complexity_states'] = _get_states(game_epochs, complexity=True)
+    game_data['time_kd_tree'] = _time_kd_tree(np.array(time_stamps, ndmin=2))
 
     return game_data

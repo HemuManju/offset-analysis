@@ -1,5 +1,7 @@
 import collections
 
+from scipy import spatial
+
 
 def findkeys(node, kv):
     if isinstance(node, list):
@@ -16,3 +18,8 @@ def findkeys(node, kv):
 
 def nested_dict():
     return collections.defaultdict(nested_dict)
+
+
+def _time_kd_tree(time_stamps):
+    time_tree = spatial.KDTree(time_stamps)
+    return time_tree

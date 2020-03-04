@@ -108,7 +108,6 @@ def clean_with_ica(raw_eeg, config, show_ica=False):
                                           random_state=42,
                                           n_jobs=10)
     ica.fit(epochs, picks=picks, reject=reject_threshold, tstep=epoch_length)
-    epochs.plot(block=True)
 
     # Extra caution to detect the eye blinks
     ica = append_eog_index(epochs, ica)  # Append the eog index to ICA

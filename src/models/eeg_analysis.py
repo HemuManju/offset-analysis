@@ -28,6 +28,11 @@ def _construct_eeg_data(config, save_dataframe):
             temp_df['subject'] = subject
             temp_df['complexity'] = session_name[session]
 
+            # Remove first 10% and last 10% of the data
+            n = int(0.10 * temp_df.shape[0])
+            temp_df.drop(temp_df.head(n).index, inplace=True)
+            temp_df.drop(temp_df.tail(n).index, inplace=True)
+
             # Append it the the global dataframe
             eeg_dataframe.append(temp_df)
 
