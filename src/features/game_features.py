@@ -98,6 +98,6 @@ def extract_game_features(config, subject, session):
     game_data['map_pos'] = _get_map_pos(game_epochs)
     game_data['states'] = _get_states(game_epochs, complexity=False)
     game_data['complexity_states'] = _get_states(game_epochs, complexity=True)
-    game_data['time_kd_tree'] = _time_kd_tree(np.array(time_stamps, ndmin=2))
+    game_data['time_kd_tree'] = _time_kd_tree(np.array(time_stamps, ndmin=2).T)
 
     return game_data

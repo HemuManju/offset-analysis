@@ -5,7 +5,7 @@ import deepdish as dd
 import numpy
 
 import statsmodels.api as sm
-import statsmodels.formula.api as smf
+# import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 from patsy import dmatrices
 

@@ -235,8 +235,8 @@ def draw_heatmap(fixations,
     lowbound = numpy.mean(heatmap[heatmap > 0])
     heatmap[heatmap < lowbound] = numpy.NaN
     # draw heatmap on top of image
-    ax.imshow(image)
-    ax.imshow(heatmap, cmap='jet', alpha=alpha)
+    ax.imshow(image, origin='upper')
+    ax.imshow(heatmap, cmap='jet', alpha=alpha, origin='upper')
     pyplot.pause(0.001)
     ax.cla()
 

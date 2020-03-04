@@ -1,12 +1,14 @@
 import time
+from pathlib import Path
+from PIL import Image
 
+import numpy
 import deepdish as dd
 import matplotlib.pyplot as plt
-
-from pathlib import Path
 import pandas as pd
-
 import seaborn as sns
+
+from features.gaze.gazeplotter import draw_heatmap, draw_display
 
 
 def image_sequence(config):
@@ -153,3 +155,22 @@ def animate_bar_plot(config, subject, outcome):
         plt.cla()
         if i == 0:
             time.sleep(20)
+
+
+def draw_fixation_in_map_coor(fixations):
+    read_path = Path(
+        __file__).parents[1] / 'visualization/images/Benning_nodes.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.array(img)
+
+    fig, ax = draw_display((1500, 750), imagefile=read_path)
+    for i in range(0, len(fixations) - 5):
+        fixation = fixations[i:i + 5]
+        draw_heatmap(fixation,
+                     dispsize=(1500, 750),
+                     ax=ax,
+                     image=img,
+                     imagefile=img)
+        plt.cla()

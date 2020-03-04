@@ -49,7 +49,8 @@ def _compute_eye_features(epochs, time_stamps):
     eye_data['pupil_size'] = pupil_size
     eye_data['scan_path_length'] = [scan_path_length]
     eye_data['time_stamps'] = time_stamps
-    eye_data['time_kd_tree'] = _time_kd_tree(numpy.array(time_stamps, ndmin=2))
+    eye_data['time_kd_tree'] = _time_kd_tree(
+        numpy.array(time_stamps, ndmin=2).T)
 
     # Convert eye data for map co-ordinate frame
     eye_data['pos'] = numpy.stack((pos_x, pos_y), axis=0).T
