@@ -25,12 +25,6 @@ def _construct_game_data(config, save_dataframe):
             raw_data = data['sub-OFS_' + subject][session]['game_features']
             # Need to orient and transpose,
             # because the data are of not same length
-            raw_data['n_fixations'] = [raw_data['n_fixations']]
-            raw_data['n_saccades'] = [raw_data['n_saccades']]
-            raw_data['avg_pupil_size'] = [
-                numpy.nanmean(raw_data['pupil_size'])
-            ]
-
             temp_df = pd.DataFrame.from_dict(raw_data,
                                              orient='index').transpose()
             # Add additional information
@@ -58,15 +52,25 @@ def game_features_analysis(config, features):
         # Generate the dataframe
         game_dataframe = _construct_game_data(config, save_dataframe=True)
 
-    # Select the features
+    # Select the features and clean
     game_dataframe = game_dataframe[features + ['complexity', 'subject']]
     game_dataframe.dropna(inplace=True)
-    eye_subject_group = game_dataframe.groupby(['subject',
-                                                'complexity']).count()
-
-    eye_subject_group.reset_index(inplace=True)
+    game_subject_group = game_dataframe.groupby(['subject',
+                                                 'complexity']).count()
+    game_subject_group.reset_index(inplace=True)
 
     models = []
     for feature in features:
-        models.append(ols_regression('complexity', feature, eye_subject_group))
-    return models, eye_subject_group
+        models.append(ols_regression('complexity', feature,
+                                     game_subject_group))
+    return models, game_subject_group
+
+
+def get_user_actions(config, subject, session):
+    # Check is dataframe is already there
+    subject_group = ''.join(
+        ['/sub-OFS_', subject, '/', session, '/', 'game_features'])
+    read_path = Path(__file__).parents[2] / config['offset_features_path']
+    data = dd.io.load(read_path, group=subject_group)
+
+    print(data['selected_node'])

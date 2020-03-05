@@ -9,12 +9,14 @@ from data.utils import save_dataset, read_dataset
 from features.offset_features import extract_offset_features
 
 from models.eeg_analysis import eeg_features_analysis
-from models.eye_analysis import (eye_features_analysis, fixation_in_map_coor)
+from models.eye_analysis import (eye_features_analysis, calculate_fixations)
+from models.game_analysis import get_user_actions
 from models.indv_analysis import individual_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
                                      eye_features_visualize,
-                                     draw_fixation_in_map_coor)
+                                     draw_fixation_in_map_coor,
+                                     draw_fixation_in_global_coor)
 
 from visualization.epoch_visualize import topo_visualize
 
@@ -72,11 +74,22 @@ with skip_run('skip', 'EEG topoplot visualize') as check, check():
     epochs = data['sub-OFS_2008']['S005']['eeg'].load_data()
     topo_visualize(epochs, config)
 
-with skip_run('run', 'Eye feature visualize') as check, check():
+with skip_run('skip', 'Eye fixation in map') as check, check():
     subject = config['subjects'][0]
     session = config['sessions'][0]
-    fixations = fixation_in_map_coor(config, subject, session)
+    fixations = calculate_fixations(config, subject, session, in_map=True)
     draw_fixation_in_map_coor(fixations)
+
+with skip_run('skip', 'Eye fixation in screen') as check, check():
+    subject = config['subjects'][0]
+    session = config['sessions'][0]
+    fixations = calculate_fixations(config, subject, session)
+    draw_fixation_in_global_coor(fixations)
+
+with skip_run('skip', 'User actions') as check, check():
+    subject = config['subjects'][0]
+    session = config['sessions'][1]
+    selected_nodes = get_user_actions(config, subject, session)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():
     individual_features_analysis(config)

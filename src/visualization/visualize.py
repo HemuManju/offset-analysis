@@ -11,25 +11,6 @@ import seaborn as sns
 from features.gaze.gazeplotter import draw_heatmap, draw_display
 
 
-def image_sequence(config):
-    # Load the image files
-    image_stream = dd.io.load(config['image_save_path'] + 'rgb_depth_seg.h5')
-
-    # Figure
-    fig, ax = plt.subplots(1, 3, figsize=[12, 5])
-    titles = ['RGB Image', 'Depth Image', 'Segmented Image']
-    plt.tight_layout()
-
-    for stream in image_stream:
-        for i in range(len(titles)):
-            ax[i].imshow(stream[i], origin='lower')
-            ax[i].title.set_text(titles[i])
-        plt.pause(0.01)
-
-        for i in range(len(titles)):
-            ax[i].cla()
-
-
 def _plot_settings():
     """Change the asthetics of the given figure (operators in place).
 
@@ -57,6 +38,25 @@ def _box_plots(models, dataframe, dependent, independent, axes):
                 width=0.45)
     plt.suptitle("")
     return None
+
+
+def image_sequence(config):
+    # Load the image files
+    image_stream = dd.io.load(config['image_save_path'] + 'rgb_depth_seg.h5')
+
+    # Figure
+    fig, ax = plt.subplots(1, 3, figsize=[12, 5])
+    titles = ['RGB Image', 'Depth Image', 'Segmented Image']
+    plt.tight_layout()
+
+    for stream in image_stream:
+        for i in range(len(titles)):
+            ax[i].imshow(stream[i], origin='lower')
+            ax[i].title.set_text(titles[i])
+        plt.pause(0.01)
+
+        for i in range(len(titles)):
+            ax[i].cla()
 
 
 def eeg_features_visualize(models, dataframe, features, independent):
@@ -160,6 +160,21 @@ def animate_bar_plot(config, subject, outcome):
 def draw_fixation_in_map_coor(fixations):
     read_path = Path(
         __file__).parents[1] / 'visualization/images/Benning_nodes.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.flip(numpy.array(img), axis=0)
+
+    fig, ax = draw_display((1500, 750), imagefile=read_path)
+    for i in range(0, len(fixations) - 5):
+        fixation = fixations[i:i + 5]
+        ax.imshow(img)
+        draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
+        plt.cla()
+
+
+def draw_fixation_in_global_coor(fixations):
+    read_path = Path(__file__).parents[1] / 'visualization/images/Game.png'
 
     img = Image.open(read_path)
     img = img.resize((1500, 750))

@@ -51,11 +51,21 @@ def _construct_eye_data(config, save_dataframe):
     return eye_dataframe
 
 
-def _convert_to_map_coor(fixations, map_pos):
-
+def _convert_to_map_coor(fixations, map_pos, window_size):
+    width = int(window_size[0] / 2)
+    height = int(window_size[1] / 2)
     for fixation, map_pos in zip(fixations, map_pos):
-        fixation[3] = 750 - map_pos[0] + fixation[3]
-        fixation[4] = 375 - map_pos[1] + fixation[4]
+        fixation[3] = width - map_pos[0] + fixation[3]
+        fixation[4] = height - map_pos[1] + fixation[4]
+    return fixations
+
+
+def _convert_to_global_coor(fixations, window_size):
+    width = int(window_size[0] / 2)
+    height = int(window_size[1] / 2)
+    for fixation in fixations:
+        fixation[3] = width + fixation[3]
+        fixation[4] = height + fixation[4]
     return fixations
 
 
@@ -82,7 +92,7 @@ def eye_features_analysis(config, features):
     return models, eye_subject_group
 
 
-def fixation_in_map_coor(config, subject, session):
+def calculate_fixations(config, subject, session, in_map=False):
     subject_group = '/sub-OFS_' + subject
     read_path = Path(__file__).parents[2] / config['offset_features_path']
     data = dd.io.load(read_path, group=subject_group)
@@ -110,6 +120,9 @@ def fixation_in_map_coor(config, subject, session):
     map_pos = numpy.array(map_pos)[sync_index]
 
     # Convert to map co-ordinate systems
-    fixations_map_coor = _convert_to_map_coor(fixations, map_pos)
+    if in_map:
+        fixations = _convert_to_map_coor(fixations, map_pos, [1500, 750])
+    else:
+        fixations = _convert_to_global_coor(fixations, [1500, 750])
 
-    return fixations_map_coor
+    return fixations

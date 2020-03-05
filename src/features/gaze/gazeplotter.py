@@ -32,7 +32,6 @@ __author__ = "Edwin Dalmaijer"
 import os
 # external
 import numpy
-import matplotlib
 from matplotlib import pyplot
 from PIL import Image
 
@@ -53,9 +52,6 @@ COLS = {
     "aluminium":
     ['#eeeeec', '#d3d7cf', '#babdb6', '#888a85', '#555753', '#2e3436'],
 }
-# FONT
-FONT = {'family': 'Ubuntu', 'size': 12}
-matplotlib.rc('font', **FONT)
 
 # # # # #
 # FUNCTIONS
@@ -247,6 +243,110 @@ def draw_heatmap(fixations,
     # if savefilename is not None:
     #     fig.savefig(savefilename)
 
+    return None
+
+
+def animate_heatmap(fixations,
+                    dispsize,
+                    ax,
+                    imagefile=None,
+                    durationweight=True,
+                    alpha=0.5,
+                    savefilename=None):
+    """Draws a heatmap of the provided fixations, optionally drawn over an
+    image, and optionally allocating more weight to fixations with a higher
+    duration.
+
+    arguments
+
+    fixations		-	a list of fixation ending events from a single trial,
+                    as produced by edfreader.read_edf, e.g.
+                    edfdata[trialnr]['events']['Efix']
+    dispsize		-	tuple or list indicating the size of the display,
+                    e.g. (1024,768)
+
+    keyword arguments
+
+    imagefile		-	full path to an image file over which the heatmap
+                    is to be laid, or None for no image; NOTE: the image
+                    may be smaller than the display size, the function
+                    assumes that the image was presented at the centre of
+                    the display (default = None)
+    durationweight	-	Boolean indicating whether the fixation duration is
+                    to be taken into account as a weight for the heatmap
+                    intensity; longer duration = hotter (default = True)
+    alpha		-	float between 0 and 1, indicating the transparancy of
+                    the heatmap, where 0 is completely transparant and 1
+                    is completely untransparant (default = 0.5)
+    savefilename	-	full path to the file in which the heatmap should be
+                    saved, or None to not save the file (default = None)
+
+    returns
+
+    fig			-	a matplotlib.pyplot Figure instance, containing the
+                    heatmap
+    """
+
+    # FIXATIONS
+    fix = parse_fixations(fixations)
+
+    # IMAGE
+    # fig, ax = draw_display(dispsize, imagefile=imagefile)
+
+    # HEATMAP
+    # Gaussian
+    gwh = 200
+    gsdwh = gwh / 6
+    gaus = gaussian(gwh, gsdwh)
+    # matrix of zeroes
+    strt = int(gwh / 2)
+    heatmapsize = int(dispsize[1] + 2 * strt), int(dispsize[0] + 2 * strt)
+    heatmap = numpy.zeros(heatmapsize, dtype=float)
+    # create heatmap
+    for i in range(0, len(fix['dur'])):
+        # get x and y coordinates
+        # x and y - indexes of heatmap array. must be integers
+        x = int(strt) + int(fix['x'][i]) - int(gwh / 2)
+        y = int(strt) + int(fix['y'][i]) - int(gwh / 2)
+        # correct Gaussian size if either coordinate falls outside of
+        # display boundaries
+        if (not 0 < x < dispsize[0]) or (not 0 < y < dispsize[1]):
+            hadj = [0, gwh]
+            vadj = [0, gwh]
+            if 0 > x:
+                hadj[0] = abs(x)
+                x = 0
+            elif dispsize[0] < x:
+                hadj[1] = gwh - int(x - dispsize[0])
+            if 0 > y:
+                vadj[0] = abs(y)
+                y = 0
+            elif dispsize[1] < y:
+                vadj[1] = gwh - int(y - dispsize[1])
+            # add adjusted Gaussian to the current heatmap
+            try:
+                heatmap[y:y + vadj[1],
+                        x:x + hadj[1]] += gaus[vadj[0]:vadj[1],
+                                               hadj[0]:hadj[1]] * fix['dur'][i]
+            except ValueError:
+                # fixation was probably outside of display
+                pass
+        else:
+            # add Gaussian to the current heatmap
+            heatmap[y:y + gwh, x:x + gwh] += gaus * fix['dur'][i]
+    # resize heatmap
+    heatmap = heatmap[strt:dispsize[1] + strt, strt:dispsize[0] + strt]
+    # remove zeros
+    lowbound = numpy.mean(heatmap[heatmap > 0])
+    heatmap[heatmap < lowbound] = numpy.NaN
+
+    # draw heatmap on top of image
+    ax.imshow(heatmap, cmap='jet', alpha=alpha)
+
+    # invert the y axis, as (0,0) is top left on a display
+    ax.invert_yaxis()
+    pyplot.pause(0.001)
+    ax.cla()
     return None
 
 
@@ -444,6 +544,7 @@ def draw_display(dispsize, imagefile=None):
         # x and y position of the image on the display
         x = int(dispsize[0] / 2 - w / 2)
         y = int(dispsize[1] / 2 - h / 2)
+
         # draw the image on the screen
         screen[y:y + h, x:x + w, :] += img[:, :, 0:3]
     # dots per inch
