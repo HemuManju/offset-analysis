@@ -76,7 +76,6 @@ def _get_casualities(game_epochs):
             causalities.append(len(ugv_casulaties[-1]))
     else:
         causalities = [0] * 6  # 3 UGV and 3 UAV
-    print(causalities)
     return causalities
 
 

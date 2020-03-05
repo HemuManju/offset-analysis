@@ -143,7 +143,6 @@ def draw_fixations(fixations,
 def draw_heatmap(fixations,
                  dispsize,
                  ax,
-                 image,
                  imagefile=None,
                  durationweight=True,
                  alpha=0.5,
@@ -234,15 +233,16 @@ def draw_heatmap(fixations,
     # remove zeros
     lowbound = numpy.mean(heatmap[heatmap > 0])
     heatmap[heatmap < lowbound] = numpy.NaN
+
     # draw heatmap on top of image
-    ax.imshow(image, origin='upper')
-    ax.imshow(heatmap, cmap='jet', alpha=alpha, origin='upper')
+    ax.imshow(heatmap, cmap='jet', alpha=alpha)
+
+    # invert the y axis, as (0,0) is top left on a display
+    ax.invert_yaxis()
     pyplot.pause(0.001)
     ax.cla()
 
     # FINISH PLOT
-    # invert the y axis, as (0,0) is top left on a display
-    # ax.invert_yaxis()
     # save the figure if a file name was provided
     # if savefilename is not None:
     #     fig.savefig(savefilename)

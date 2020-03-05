@@ -163,14 +163,11 @@ def draw_fixation_in_map_coor(fixations):
 
     img = Image.open(read_path)
     img = img.resize((1500, 750))
-    img = numpy.array(img)
+    img = numpy.flip(numpy.array(img), axis=0)
 
     fig, ax = draw_display((1500, 750), imagefile=read_path)
     for i in range(0, len(fixations) - 5):
         fixation = fixations[i:i + 5]
-        draw_heatmap(fixation,
-                     dispsize=(1500, 750),
-                     ax=ax,
-                     image=img,
-                     imagefile=img)
+        ax.imshow(img)
+        draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
         plt.cla()

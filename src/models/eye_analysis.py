@@ -52,9 +52,10 @@ def _construct_eye_data(config, save_dataframe):
 
 
 def _convert_to_map_coor(fixations, map_pos):
+
     for fixation, map_pos in zip(fixations, map_pos):
-        fixation[3] = 750 - map_pos[0] - fixation[3]
-        fixation[4] = 350 - map_pos[1] + fixation[4]
+        fixation[3] = 750 - map_pos[0] + fixation[3]
+        fixation[4] = 375 - map_pos[1] + fixation[4]
     return fixations
 
 

@@ -72,7 +72,7 @@ with skip_run('skip', 'EEG topoplot visualize') as check, check():
     epochs = data['sub-OFS_2008']['S005']['eeg'].load_data()
     topo_visualize(epochs, config)
 
-with skip_run('skip', 'Eye feature visualize') as check, check():
+with skip_run('run', 'Eye feature visualize') as check, check():
     subject = config['subjects'][0]
     session = config['sessions'][0]
     fixations = fixation_in_map_coor(config, subject, session)

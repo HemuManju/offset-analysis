@@ -7,10 +7,6 @@ from .gaze.detectors import (blink_detection, fixation_detection,
 from .utils import _time_kd_tree
 
 
-def _convert_to_map_coor(eye_pos, map_pos):
-    return [750 - map_pos[0] + eye_pos[0], 375 - map_pos[1] - eye_pos[1]]
-
-
 def _compute_eye_features(epochs, time_stamps):
     milli_time_stamps = (time_stamps - time_stamps[0]) * 1000
     eye_data = {}
@@ -34,7 +30,7 @@ def _compute_eye_features(epochs, time_stamps):
     _, fixations = fixation_detection(pos_x,
                                       pos_y,
                                       milli_time_stamps,
-                                      mindur=100)
+                                      mindur=50)
     _, saccades = saccade_detection(pos_x.astype(int), pos_y.astype(int),
                                     milli_time_stamps)
     pupil_size = data['avg_pupil_dia'].values

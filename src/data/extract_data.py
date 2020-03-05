@@ -82,12 +82,11 @@ def read_xdf_game_data(config, subject, session):
 
 
 def extract_offset_data(config):
-    sessions = config['sessions']
     subjects_data = {}
 
     for subject in config['subjects']:
         data = nested_dict()
-        for session in sessions:
+        for session in config['sessions']:
             eye_data, eye_time_stamp = read_xdf_eye_data(
                 config, subject, session)
             eeg_data, eeg_time_stamp = read_xdf_eeg_data(
