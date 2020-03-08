@@ -157,7 +157,7 @@ def animate_bar_plot(config, subject, outcome):
             time.sleep(20)
 
 
-def draw_fixation_in_map_coor(fixations):
+def draw_fixation_in_map_coor(fixations, animate=True):
     read_path = Path(
         __file__).parents[1] / 'visualization/images/Benning_nodes.png'
 
@@ -165,16 +165,43 @@ def draw_fixation_in_map_coor(fixations):
     img = img.resize((1500, 750))
     img = numpy.flip(numpy.array(img), axis=0)
 
-    fig, ax = draw_display((1500, 750), imagefile=read_path)
-    for i in range(0, len(fixations) - 5):
-        fixation = fixations[i:i + 5]
-        ax.imshow(img)
-        draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
-        plt.cla()
+    if animate:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        for i in range(0, len(fixations) - 5):
+            fixation = fixations[i:i + 5]
+            ax.imshow(img)
+            draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
+            plt.cla()
+    else:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        fixations = fixations[:-1]
+        draw_heatmap(fixations, dispsize=(1500, 750), ax=ax, imagefile=img)
+        plt.show()
 
 
-def draw_fixation_in_global_coor(fixations):
+def draw_fixation_in_global_coor(fixations, animate=True):
     read_path = Path(__file__).parents[1] / 'visualization/images/Game.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.flip(numpy.array(img), axis=0)
+
+    if animate:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        for i in range(0, len(fixations) - 5):
+            fixation = fixations[i:i + 5]
+            ax.imshow(img)
+            draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
+            plt.cla()
+    else:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        draw_heatmap(fixations, dispsize=(1500, 750), ax=ax, imagefile=img)
+        plt.show()
+
+
+def draw_user_action_fixations(fixations, user_action):
+    read_path = Path(
+        __file__).parents[1] / 'visualization/images/Benning_nodes.png'
 
     img = Image.open(read_path)
     img = img.resize((1500, 750))

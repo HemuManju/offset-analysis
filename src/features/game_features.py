@@ -36,6 +36,34 @@ def _get_selected_node(game_epochs, node_position):
     return node_index, node_pos
 
 
+def _get_target_building(game_epochs, node_position):
+    target_buildings = {
+        0: 38,
+        1: 39,
+        2: 40,
+        3: 51,
+    }
+    target_pos = np.array([[-40.69, 198.36], [57.91725, 149.91],
+                           [38.49, 96.26], [-40.32225, 178.85]],
+                          ndmin=2)
+    # Find the platoon centroid of the last timestamp
+    states = list(findkeys(game_epochs, 'state'))
+    ugv_group = list(findkeys(states, 'ugv'))
+    ugv_centroid = list(findkeys(ugv_group[-1], 'centroid_pos'))
+    centroid_pos = np.array(ugv_centroid, ndmin=2)
+
+    # Find the index of distance below the threshold
+    dist = distance.cdist(target_pos, centroid_pos)
+    try:
+        idx = np.where(dist < 8)[0][0]
+        target_id = target_buildings[idx]
+    except IndexError:
+        idx, _ = _get_selected_node(game_epochs, node_position)
+        target_id = idx[-1]  # Last selected node
+
+    return target_id
+
+
 def _get_selected_platoons(game_epochs):
     selected_list = list(findkeys(game_epochs, 'selected'))
     selection_key = []
@@ -53,9 +81,9 @@ def _get_map_pos(game_epochs):
 
 def _get_states(game_epochs, complexity):
     if complexity:
-        states = list(findkeys(game_epochs, 'complexity_states'))
+        states = list(findkeys(game_epochs, 'complexity_state'))
     else:
-        states = list(findkeys(game_epochs, 'states'))
+        states = list(findkeys(game_epochs, 'state'))
     return states
 
 
@@ -88,15 +116,17 @@ def extract_game_features(config, subject, session):
 
     node_index, node_pos = _get_selected_node(game_epochs, node_position)
     game_data['selected_node'] = node_index
-    game_data['casualities'] = _get_casualities(game_epochs)
     game_data['selected_node_pos'] = node_pos
+    game_data['time_stamps'] = time_stamps
+    game_data['casualities'] = _get_casualities(game_epochs)
     game_data['platoon_selected'] = _get_selected_platoons(game_epochs)
     game_data['pause'] = list(findkeys(game_epochs, 'pause'))
     game_data['resume_state'] = list(findkeys(game_epochs, 'resume'))
-    game_data['time_stamps'] = time_stamps
     game_data['map_pos'] = _get_map_pos(game_epochs)
-    game_data['states'] = _get_states(game_epochs, complexity=False)
     game_data['complexity_states'] = _get_states(game_epochs, complexity=True)
+    game_data['states'] = _get_states(game_epochs, complexity=False)
+    game_data['target_building'] = _get_target_building(
+        game_epochs, node_position)
     game_data['time_kd_tree'] = _time_kd_tree(np.array(time_stamps, ndmin=2).T)
 
     return game_data

@@ -10,7 +10,8 @@ from features.offset_features import extract_offset_features
 
 from models.eeg_analysis import eeg_features_analysis
 from models.eye_analysis import (eye_features_analysis, calculate_fixations)
-from models.game_analysis import get_user_actions
+from models.game_analysis import (_get_user_actions, graph_with_user_actions,
+                                  _get_platoon_node_position)
 from models.indv_analysis import individual_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
@@ -78,7 +79,7 @@ with skip_run('skip', 'Eye fixation in map') as check, check():
     subject = config['subjects'][0]
     session = config['sessions'][0]
     fixations = calculate_fixations(config, subject, session, in_map=True)
-    draw_fixation_in_map_coor(fixations)
+    draw_fixation_in_map_coor(fixations, animate=False)
 
 with skip_run('skip', 'Eye fixation in screen') as check, check():
     subject = config['subjects'][0]
@@ -89,7 +90,12 @@ with skip_run('skip', 'Eye fixation in screen') as check, check():
 with skip_run('skip', 'User actions') as check, check():
     subject = config['subjects'][0]
     session = config['sessions'][1]
-    selected_nodes = get_user_actions(config, subject, session)
+    selected_nodes = _get_user_actions(config, subject, session)
+
+with skip_run('skip', 'Visualize user actions') as check, check():
+    subject = config['subjects'][8]
+    session = config['sessions'][3]
+    G = graph_with_user_actions(config, subject, session)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():
     individual_features_analysis(config)
