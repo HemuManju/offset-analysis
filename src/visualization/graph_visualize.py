@@ -6,7 +6,7 @@ def _networ_legend(ax):
     legend_dict = {
         'Nodes': '#65A754',
         'Target': '#0E0E0E',
-        'User input': '#8E539F',
+        'User Input': '#8E539F',
         'Blue Team': '#4A7DB3',
         'Red Team': '#D2352B'
     }

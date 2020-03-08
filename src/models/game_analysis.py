@@ -99,7 +99,7 @@ def _get_user_actions(config, subject, session, use_resume=False):
     selected_node = data['selected_node']
 
     if use_resume:
-        resumes = data['resume_state']
+        resumes = [item for item in data['game_state']['resume']]
         # Verify the length of data
         assert len(selected_node) == len(
             resumes), "Data are not of same length"
@@ -186,7 +186,7 @@ def graph_with_user_actions(config, subject, session):
     #            ) == platoon_nodes.shape[1], "Data are not of same length"
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    for i in range(0, len(selected_nodes), 20):
+    for i in range(0, len(selected_nodes), 10):
         # Get the graph
         G = _construct_graph(config, target_id)
 

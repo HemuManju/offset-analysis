@@ -11,7 +11,7 @@ from features.offset_features import extract_offset_features
 from models.eeg_analysis import eeg_features_analysis
 from models.eye_analysis import (eye_features_analysis, calculate_fixations)
 from models.game_analysis import (_get_user_actions, graph_with_user_actions,
-                                  _get_platoon_node_position)
+                                  _initial_nodes_setup)
 from models.indv_analysis import individual_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
@@ -94,7 +94,7 @@ with skip_run('skip', 'User actions') as check, check():
 
 with skip_run('skip', 'Visualize user actions') as check, check():
     subject = config['subjects'][8]
-    session = config['sessions'][3]
+    session = config['sessions'][4]
     G = graph_with_user_actions(config, subject, session)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():

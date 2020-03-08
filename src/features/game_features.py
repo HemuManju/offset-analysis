@@ -43,24 +43,32 @@ def _get_target_building(game_epochs, node_position):
         2: 40,
         3: 51,
     }
-    target_pos = np.array([[-40.69, 198.36], [57.91725, 149.91],
-                           [38.49, 96.26], [-40.32225, 178.85]],
-                          ndmin=2)
-    # Find the platoon centroid of the last timestamp
+    target_pos = np.array(
+        [[57.91725, 149.91111111], [38.48962, 96.25777778],
+         [21.99375, 189.26222222], [-40.32225, 178.85333333]],
+        ndmin=2)
+    # Find the platoon centroid
     states = list(findkeys(game_epochs, 'state'))
     ugv_group = list(findkeys(states, 'ugv'))
-    ugv_centroid = list(findkeys(ugv_group[-1], 'centroid_pos'))
+    ugv_centroid = list(findkeys(ugv_group, 'centroid_pos'))
     centroid_pos = np.array(ugv_centroid, ndmin=2)
 
     # Find the index of distance below the threshold
-    dist = distance.cdist(target_pos, centroid_pos)
+    dist = distance.cdist(target_pos, centroid_pos)[:]
+    n_ele = len(dist) - int(len(dist) // 12) * 12
+    dist = dist[n_ele:].reshape(12, -1, order='F')
+    row_idx, column_idx = np.where(dist < 8)
     try:
-        idx = np.where(dist < 8)[0][0]
-        target_id = target_buildings[idx]
-    except IndexError:
-        idx, _ = _get_selected_node(game_epochs, node_position)
-        target_id = idx[-1]  # Last selected node
+        time_stamp = np.argmax(column_idx)
+        idx = target_buildings[int(row_idx[time_stamp] % 4)]
+    except ValueError:
+        idx = 0
+        user_selected, _ = _get_selected_node(game_epochs, node_position)
 
+    if idx in [38, 39, 40, 51]:
+        target_id = idx
+    else:
+        target_id = user_selected[-1]
     return target_id
 
 
@@ -91,19 +99,16 @@ def _get_casualities(game_epochs):
     causalities = []
     states = list(findkeys(game_epochs, 'state'))
     if states:
-        for i in range(3):
-            # Extract UAV and UGV group
-            uav_group = list(findkeys(states, 'uav_p_' + str(i + 1)))
-            uav_casulaties = list(findkeys(uav_group, 'casualities'))
+        # Extract UAV and UGV group
+        uav_group = list(findkeys(states[-1], 'uav'))
+        uav_casulaties = list(findkeys(uav_group, 'casualities'))
+        causalities.append([len(i) for i in uav_casulaties])
 
-            causalities.append(len(uav_casulaties[-1]))
-
-            ugv_group = list(findkeys(states, 'ugv_p_' + str(i + 1)))
-            ugv_casulaties = list(findkeys(ugv_group, 'casualities'))
-
-            causalities.append(len(ugv_casulaties[-1]))
+        ugv_group = list(findkeys(states[-1], 'ugv'))
+        ugv_casulaties = list(findkeys(ugv_group, 'casualities'))
+        causalities.append([len(i) for i in ugv_casulaties])
     else:
-        causalities = [0] * 6  # 3 UGV and 3 UAV
+        causalities = [[0] * 3, [0] * 3]  # 3 UGV and 3 UAV
     return causalities
 
 
@@ -113,15 +118,13 @@ def extract_game_features(config, subject, session):
 
     # Read the game epochs
     game_epochs, time_stamps = read_xdf_game_data(config, subject, session)
-
     node_index, node_pos = _get_selected_node(game_epochs, node_position)
     game_data['selected_node'] = node_index
     game_data['selected_node_pos'] = node_pos
     game_data['time_stamps'] = time_stamps
     game_data['casualities'] = _get_casualities(game_epochs)
     game_data['platoon_selected'] = _get_selected_platoons(game_epochs)
-    game_data['pause'] = list(findkeys(game_epochs, 'pause'))
-    game_data['resume_state'] = list(findkeys(game_epochs, 'resume'))
+    game_data['game_state'] = list(findkeys(game_epochs, 'game'))
     game_data['map_pos'] = _get_map_pos(game_epochs)
     game_data['complexity_states'] = _get_states(game_epochs, complexity=True)
     game_data['states'] = _get_states(game_epochs, complexity=False)

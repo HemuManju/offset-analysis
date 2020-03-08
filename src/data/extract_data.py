@@ -73,11 +73,9 @@ def read_xdf_game_data(config, subject, session):
     for stream in streams:
         raw_game = []
         if stream["info"]["name"][0] == 'parameter_server_states':
-            for data in stream["time_series"]:
-                raw_game.append(ujson.loads(data[0]))
+            raw_game = [ujson.loads(data[0]) for data in stream["time_series"]]
             time_stamps = stream["time_stamps"]
             break
-
     return raw_game, time_stamps
 
 
