@@ -1,3 +1,7 @@
+import itertools
+
+import time
+
 from pathlib import Path
 
 import deepdish as dd
@@ -65,7 +69,7 @@ def _construct_graph(config, target_id):
     G = nx.from_numpy_matrix(adjacency_matrix)
     # Add node weight and color
     nx.set_node_attributes(G, name='node_weight', values=100)
-    nx.set_node_attributes(G, name='node_color', values='#666666')
+    nx.set_node_attributes(G, name='node_color', values='#65A754')
     nx.set_node_attributes(G, name='position', values=0)
 
     # Buildings ids
@@ -79,7 +83,7 @@ def _construct_graph(config, target_id):
         if node in building_ids:
             G.nodes[node]['node_weight'] = 1000
         else:
-            G.nodes[node]['node_weight'] = 100
+            G.nodes[node]['node_weight'] = 250
         G.nodes[node]['position'] = (position[0], -position[1])
     return G
 
@@ -190,20 +194,13 @@ def graph_with_user_actions(config, subject, session):
         action_node = selected_nodes[i]
         if action_node:
             G.nodes[action_node]['node_color'] = '#8E539F'
-            G.nodes[action_node]['node_weight'] = 500
 
         # Platoon node
         platoon_node = platoon_nodes[:, i].tolist()
         complexity_node = complexity_nodes[:, i].tolist()
-        for i, (node,
-                complex_node) in enumerate(zip(platoon_node, complexity_node)):
-            if i >= 3:
-                G.nodes[node]['node_color'] = '#519D3E'
-                G.nodes[node]['node_weight'] = 500
-            else:
-                G.nodes[node]['node_color'] = '#4A7DB3'
-                G.nodes[node]['node_weight'] = 500
-
+        for node, complex_node in zip(platoon_node, complexity_node):
+            G.nodes[node]['node_color'] = '#4A7DB3'
+            G.nodes[node]['node_weight'] = 500
             G.nodes[complex_node]['node_color'] = '#D2352B'
             G.nodes[complex_node]['node_weight'] = 500
 
@@ -211,36 +208,3 @@ def graph_with_user_actions(config, subject, session):
         plt.pause(1e-1)
         ax.cla()
     return None
-
-
-def game_with_platoons(config, subject, session, complexity=False):
-    if complexity:
-        subject_group = ''.join([
-            '/sub-OFS_', subject, '/', session, '/game_features',
-            '/complexity_states'
-        ])
-    else:
-        subject_group = ''.join(
-            ['/sub-OFS_', subject, '/', session, '/game_features', '/states'])
-
-    read_path = Path(__file__).parents[2] / config['offset_features_path']
-    states = dd.io.load(read_path, group=subject_group)
-
-    # Centroid position
-    centroid_pos = numpy.array(list(findkeys(states, 'centroid_pos')), ndmin=2)
-    centroid_pos = centroid_pos.reshape(-1, 6, 2)
-    return centroid_pos
-
-
-def _target_check(config):
-    for subject in config['subjects']:
-        for session in config['sessions']:
-            # Get the target building
-            subject_group = ''.join([
-                '/sub-OFS_', subject, '/', session, '/',
-                'game_features/target_building'
-            ])
-            read_path = Path(
-                __file__).parents[2] / config['offset_features_path']
-            target_id = dd.io.load(read_path, group=subject_group)
-            print(target_id)

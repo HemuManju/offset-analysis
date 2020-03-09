@@ -532,7 +532,7 @@ def draw_display(dispsize, imagefile=None):
         # img = image.imread(imagefile)
         img = Image.open(imagefile)
         img = img.resize((1500, 750))
-        img = numpy.flip(numpy.array(img), axis=0)
+        img = numpy.array(img)
         # flip image over the horizontal axis
         # (do not do so on Windows, as the image appears to be loaded with
         # the correct side up there; what's up with that? :/)

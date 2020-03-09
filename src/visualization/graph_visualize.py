@@ -4,12 +4,11 @@ import matplotlib.patches as mpatches
 
 def _networ_legend(ax):
     legend_dict = {
-        'Nodes': '#666666',
+        'Nodes': '#65A754',
         'Target': '#0E0E0E',
-        'User\nInput': '#8E539F',
-        'Blue\nTeam UAV': '#4A7DB3',
-        'Blue\nTeam UGV': '#519D3E',
-        'Red\nTeam': '#D2352B'
+        'User Input': '#8E539F',
+        'Blue Team': '#4A7DB3',
+        'Red Team': '#D2352B'
     }
 
     patchList = []
@@ -21,7 +20,7 @@ def _networ_legend(ax):
     ax.legend(handles=patchList,
               bbox_to_anchor=(0, 1),
               loc='lower left',
-              fontsize=14,
+              fontsize=16,
               ncol=len(legend_dict.keys()))
     return None
 

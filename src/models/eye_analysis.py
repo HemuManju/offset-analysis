@@ -9,12 +9,6 @@ from .regression import ols_regression
 from .utils import sync_time_series
 
 
-def _without_keys(dictionary, exclude):
-    for i in exclude:
-        dictionary.pop(i)
-    return dictionary
-
-
 def _construct_eye_data(config, save_dataframe):
     eye_dataframe = []
     session_name = {
@@ -26,15 +20,11 @@ def _construct_eye_data(config, save_dataframe):
     }
 
     read_path = Path(__file__).parents[2] / config['offset_features_path']
+    data = dd.io.load(read_path)
 
     for subject in config['subjects']:
         for session in config['sessions']:
-            read_group = ''.join(
-                ['/sub-OFS_', subject, '/', session, '/eye_features'])
-            raw_data = dd.io.load(read_path, group=read_group)
-            raw_data = _without_keys(raw_data,
-                                     ['time_kd_tree'])  # No need for KD tree
-
+            raw_data = data['sub-OFS_' + subject][session]['eye_features']
             # Need to orient and transpose,
             # because the data are of not same length
             raw_data['n_fixations'] = [raw_data['n_fixations']]
