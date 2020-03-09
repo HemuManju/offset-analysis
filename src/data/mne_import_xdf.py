@@ -176,9 +176,7 @@ def read_raw_xdf(fname, stream_id=None):
     if stream is not None:
         name = stream["info"]["name"][0]
         n_chans = int(stream["info"]["channel_count"][0])
-        # fs = float(stream["info"]["nominal_srate"][0])
-        # NOTE: Have used calculated rate
-        fs = float(stream["info"]["effective_srate"])
+        fs = float(stream["info"]["nominal_srate"][0])
         logger.info(f"Found EEG stream '{name}' ({n_chans} channels, "
                     f"sampling rate {fs}Hz).")
         labels, types, units = _get_ch_info(stream)
@@ -186,10 +184,7 @@ def read_raw_xdf(fname, stream_id=None):
             labels = [str(n) for n in range(n_chans)]
         if not units:
             units = ["NA" for _ in range(n_chans)]
-        info = mne.create_info(ch_names=labels,
-                               sfreq=fs,
-                               ch_types=types[0].lower(),
-                               verbose=False)
+        info = mne.create_info(ch_names=labels, sfreq=fs, ch_types="eeg")
         # convert from microvolts to volts if necessary
         scale = np.array([1e-6 if u == "microvolts" else 1 for u in units])
         raw = mne.io.RawArray((stream["time_series"] * scale).T, info)
@@ -206,12 +201,11 @@ def read_raw_xdf(fname, stream_id=None):
         annotations = mne.Annotations(onsets, [0] * len(onsets), descriptions)
         raw.set_annotations(annotations)
 
-    return raw, stream['time_stamps']
+    return raw
 
 
 def _find_stream_by_name(streams, stream_name):
     """Find the first stream that matches the given name."""
-
     for stream in streams:
         if stream["info"]["name"][0] == stream_name:
             return stream
@@ -231,66 +225,10 @@ def _find_stream_by_type(streams, stream_type="EEG"):
             return stream
 
 
-def _tobii_ch_info():
-    channels = []
-    eye_channels = [
-        'dev_time_stamp', 'avg_x', 'avg_y', 'avg_pupil_dia', 'avg_eye_pos_x',
-        'avg_eye_pos_y', 'avg_eye_pos_z', 'avg_eye_dist', 'eye_valid',
-        'dev_timestamp', 'sys_time_stamp', 'l_disp_area_x', 'l_disp_area_y',
-        'l_user_x', 'l_user_y', 'l_user_z', 'l_valid', 'l_pupil_dia',
-        'l_pupil_valid', 'l_or_user_x', 'l_or_user_y', 'l_or_user_z',
-        'l_or_track_x', 'l_or_track_y', 'l_or_track_z', 'l_or_valid',
-        'r_disp_area_x', 'r_disp_area_y', 'r_user_x', 'r_user_y', 'r_user_z',
-        'r_valid', 'r_pupil_dia', 'r_pupil_valid', 'r_or_user_x',
-        'r_or_user_y', 'r_or_user_z', 'r_or_track_x', 'r_or_track_y',
-        'r_or_track_z', 'r_or_valid', 'r_pixel_x', 'r_pixel_y', 'l_pixel_x',
-        'l_pixel_y'
-    ]
-    for ch in eye_channels:
-        channels.append({'label': [ch], 'type': ['misc'], 'unit': [None]})
-    return channels
-
-
-def _b_alert_ch_info():
-    channels = []
-    # EEG channels
-    eeg_channels = [
-        'Fp1', 'F7', 'F8', 'T4', 'T6', 'T5', 'T3', 'Fp2', 'O1', 'P3', 'Pz',
-        'F3', 'Fz', 'F4', 'C4', 'P4', 'POz', 'C3', 'Cz', 'O2'
-    ]
-    for ch in eeg_channels:
-        channels.append({
-            'label': [ch],
-            'type': ['EEG'],
-            'unit': ['microvolts']
-        })
-    # ECG channel
-    channels.append({
-        'label': ['ECG'],
-        'type': ['ECG'],
-        'unit': ['microvolts']
-    })
-    # Auxillary channels
-    aux_channels = ['AUX1', 'AUX2', 'AUX3']
-    for ch in aux_channels:
-        channels.append({
-            'label': [ch],
-            'type': ['AUX'],
-            'unit': ['microvolts']
-        })
-    return channels
-
-
 def _get_ch_info(stream):
     labels, types, units = [], [], []
     if stream["info"]["desc"]:
-        if stream["info"]["type"][0] == 'Eye tacking':
-            channels = _tobii_ch_info()
-        elif not stream["info"]["desc"][0]["channels"]:
-            channels = _b_alert_ch_info()
-        else:
-            channels = stream["info"]["desc"][0]["channels"][0]["channel"]
-        for ch in channels:
+        for ch in stream["info"]["desc"][0]["channels"][0]["channel"]:
             labels.append(str(ch["label"][0]))
             types.append(ch["type"][0])
             units.append(ch["unit"][0])
