@@ -179,6 +179,30 @@ def draw_fixation_in_map_coor(fixations, animate=True):
         plt.show()
 
 
+def draw_platoon_in_map_coor(platoon_positions, animate=True):
+    read_path = Path(
+        __file__).parents[1] / 'visualization/images/Benning_nodes.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.array(img)
+    color = ['#4A7DB3', '#4A7DB3', '#4A7DB3', '#519D3E', '#519D3E', '#519D3E']
+
+    if animate:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        for i in range(0, len(platoon_positions) - 5, 5):
+            position = platoon_positions[i, :, :]
+            # Convert to pixel co-ordinates
+            pixel_posx = position[:, 1] / 0.2 + 430
+            pixel_posy = position[:, 0] / 0.2 + 340
+
+            ax.imshow(img)
+            ax.scatter(pixel_posx, pixel_posy, s=750, c=color, edgecolors='k')
+            plt.pause(0.0001)
+            plt.cla()
+    return None
+
+
 def draw_fixation_in_global_coor(fixations, animate=True):
     read_path = Path(__file__).parents[1] / 'visualization/images/Game.png'
 

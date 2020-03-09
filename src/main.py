@@ -11,13 +11,14 @@ from features.offset_features import extract_offset_features
 from models.eeg_analysis import eeg_features_analysis
 from models.eye_analysis import (eye_features_analysis, calculate_fixations)
 from models.game_analysis import (_get_user_actions, graph_with_user_actions,
-                                  _initial_nodes_setup)
+                                  game_with_platoons)
 from models.indv_analysis import individual_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
                                      eye_features_visualize,
                                      draw_fixation_in_map_coor,
-                                     draw_fixation_in_global_coor)
+                                     draw_fixation_in_global_coor,
+                                     draw_platoon_in_map_coor)
 
 from visualization.epoch_visualize import topo_visualize
 
@@ -60,6 +61,7 @@ with skip_run('skip', 'EEG feature analysis') as check, check():
 with skip_run('skip', 'Eye feature analysis') as check, check():
     features = ['n_fixations', 'n_saccades']
     models, eye_subject_group = eye_features_analysis(config, features)
+    eye_subject_group.to_csv('Subject_Target_Info.csv')
     eye_features_visualize(models, eye_subject_group, features, 'complexity')
 
 with skip_run('skip', 'Game feature analysis') as check, check():
@@ -96,6 +98,12 @@ with skip_run('skip', 'Visualize user actions') as check, check():
     subject = config['subjects'][8]
     session = config['sessions'][4]
     G = graph_with_user_actions(config, subject, session)
+
+with skip_run('skip', 'Visualize platoons on the image') as check, check():
+    subject = config['subjects'][8]
+    session = config['sessions'][4]
+    platoon_positions = game_with_platoons(config, subject, session)
+    draw_platoon_in_map_coor(platoon_positions)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():
     individual_features_analysis(config)
