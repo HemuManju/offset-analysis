@@ -4,6 +4,7 @@ import numpy
 def sync_time_series(time_series_a, time_kdtree_a, time_series_b,
                      time_kdtree_b):
 
+    # Always resample the longer time series
     if len(time_series_a) < len(time_series_b):
         # Time series and KD tree
         refs_t_series = time_series_a

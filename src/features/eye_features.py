@@ -54,7 +54,6 @@ def _compute_eye_features(epochs, time_stamps):
 
 
 def extract_eye_features(config, subject, session):
-
     # Read the eye data
     eye_epochs, time_stamps = read_xdf_eye_data(config, subject, session)
 

@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.patches as mpatches
 
 
-def _networ_legend(ax):
+def _network_legend(ax):
     legend_dict = {
         'Nodes': '#666666',
         'Target': '#0E0E0E',
@@ -18,12 +18,13 @@ def _networ_legend(ax):
                                   label=key,
                                   capstyle='round')
         patchList.append(data_key)
-    ax.legend(handles=patchList,
-              bbox_to_anchor=(0, 1),
-              loc='lower left',
-              fontsize=14,
-              ncol=len(legend_dict.keys()))
-    return None
+    ax.legend(
+        handles=patchList,
+        #   bbox_to_anchor=(0, 1),
+        #   loc='lower left',
+        fontsize=14,
+        ncol=len(legend_dict.keys()))
+    return ax
 
 
 def draw_graph(G, ax):
@@ -38,5 +39,5 @@ def draw_graph(G, ax):
             node_color=node_color,
             ax=ax,
             edgecolors='k')
-    _networ_legend(ax)
+    _network_legend(ax)
     return None

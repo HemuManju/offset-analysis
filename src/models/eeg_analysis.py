@@ -45,6 +45,10 @@ def _construct_eeg_data(config, save_dataframe):
     return eeg_dataframe
 
 
+def eeg_sync_with_game(config, subject, session):
+    pass
+
+
 def eeg_features_analysis(config, features):
     # Check is dataframe is already there
     read_path = Path(__file__).parents[2] / config['eeg_features_path']

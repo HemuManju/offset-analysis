@@ -5,10 +5,15 @@ from PIL import Image
 import numpy
 import deepdish as dd
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 import pandas as pd
 import seaborn as sns
 
-from features.gaze.gazeplotter import draw_heatmap, draw_display
+from .graph_visualize import _network_legend
+
+from features.gaze.gazeplotter import (draw_heatmap, draw_display,
+                                       draw_eye_heatmap)
 
 
 def _plot_settings():
@@ -176,6 +181,58 @@ def draw_fixation_in_map_coor(fixations, animate=True):
         fig, ax = draw_display((1500, 750), imagefile=read_path)
         fixations = fixations[:-1]
         draw_heatmap(fixations, dispsize=(1500, 750), ax=ax, imagefile=img)
+        plt.show()
+
+
+def animate_eye_movements_in_map_coor(eye_positions, animate=True):
+
+    read_path = Path(
+        __file__).parents[1] / 'visualization/images/Benning_nodes.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.flip(numpy.array(img), axis=0)
+
+    def update_plot(i, eye_positions, image_show):
+        position = eye_positions[i:i + 10]
+        image_data = draw_eye_heatmap(position, dispsize=(1500, 750))
+        image_show.set_data(image_data * 0)
+        image_show.set_data(image_data)
+        return [image_show]
+
+    if animate:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        ax = _network_legend(ax)
+        init_data = draw_eye_heatmap(eye_positions[0:1], dispsize=(1500, 750))
+        image_show = ax.imshow(init_data, cmap='jet', alpha=0.5)
+        animation.FuncAnimation(fig,
+                                update_plot,
+                                frames=range(0,
+                                             len(eye_positions) - 10, 10),
+                                fargs=(eye_positions, image_show),
+                                blit=True)
+        plt.show()
+
+
+def draw_eye_movements_in_map_coor(eye_positions, animate=True):
+
+    read_path = Path(
+        __file__).parents[1] / 'visualization/images/Benning_nodes.png'
+
+    img = Image.open(read_path)
+    img = img.resize((1500, 750))
+    img = numpy.flip(numpy.array(img), axis=0)
+
+    if animate:
+        fig, ax = draw_display((1500, 750), imagefile=read_path)
+        ax = _network_legend(ax)
+        for i in range(0, len(eye_positions) - 5, 5):
+            position = eye_positions[i:i + 5]
+            ax.imshow(img)
+            draw_eye_heatmap(position,
+                             dispsize=(1500, 750),
+                             ax=ax,
+                             imagefile=img)
         plt.show()
 
 
