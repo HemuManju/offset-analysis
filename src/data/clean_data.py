@@ -81,6 +81,11 @@ def clean_with_ica(raw_eeg, config, show_ica=False):
     epochs  : ICA cleaned epochs
 
     """
+    try:
+        raw_eeg = raw_eeg.drop_channels(['ECG', 'AUX1', 'AUX2', 'AUX3'])
+    except ValueError:
+        pass
+    raw_eeg.set_montage(montage="standard_1020", set_dig=True, verbose=False)
     picks = mne.pick_types(raw_eeg.info,
                            meg=False,
                            eeg=True,
@@ -118,8 +123,8 @@ def clean_with_ica(raw_eeg, config, show_ica=False):
     if show_ica:
         ica.plot_components(inst=epochs)
 
-    cleaned_eeg = ica.apply(raw_eeg)  # Apply the ICA on raw EEG
-    return cleaned_eeg, ica
+    cleaned_eeg_epochs = ica.apply(epochs)  # Apply the ICA on raw EEG
+    return cleaned_eeg_epochs, ica
 
 
 def clean_eeg_data(subjects, sessions, config):
@@ -144,7 +149,7 @@ def clean_eeg_data(subjects, sessions, config):
             print(subject, session)
 
             # Read only the eeg data
-            group = '/sub-OFS_' + '/'.join([subject, session, 'eeg'])
+            group = '/sub-OFS_' + '/'.join([subject, session, 'eeg_features'])
             eeg_data = dd.io.load(str(read_path), group=group)
             raw_eeg = eeg_data['data']
             time_stamps = eeg_data['time_stamps']

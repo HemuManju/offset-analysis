@@ -7,8 +7,8 @@ def _network_legend(ax):
         'Nodes': '#666666',
         'Target': '#0E0E0E',
         'User\nInput': '#8E539F',
-        'Blue\nTeam UAV': '#4A7DB3',
-        'Blue\nTeam UGV': '#519D3E',
+        'Blue\nTeam UAV': '#519D3E',
+        'Blue\nTeam UGV': '#4A7DB3',
         'Red\nTeam': '#D2352B'
     }
 
@@ -18,12 +18,11 @@ def _network_legend(ax):
                                   label=key,
                                   capstyle='round')
         patchList.append(data_key)
-    ax.legend(
-        handles=patchList,
-        #   bbox_to_anchor=(0, 1),
-        #   loc='lower left',
-        fontsize=14,
-        ncol=len(legend_dict.keys()))
+    ax.legend(handles=patchList,
+              bbox_to_anchor=(0, 1),
+              loc='lower left',
+              fontsize=14,
+              ncol=len(legend_dict.keys()))
     return ax
 
 

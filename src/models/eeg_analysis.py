@@ -3,6 +3,8 @@ from pathlib import Path
 import deepdish as dd
 import pandas as pd
 
+from .game_analysis import (_get_platoon_node_position, _get_user_actions,
+                            _get_complexity_node_position)
 from .regression import ols_regression
 
 

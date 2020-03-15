@@ -35,30 +35,31 @@ def topo_visualize(epochs, config):
                                   n_jobs=6,
                                   verbose=False,
                                   normalization='full')
-    fig, ax = plt.subplots(1, 2, figsize=[10, 5])
+    fig, ax = plt.subplots(2, 1, figsize=[5, 10])
     for epoch in range(n_epochs):
-        # Engagement index beta/(alpha + theta)
-        engagement, workload = get_engagement_workload(psds[epoch, :, :],
-                                                       nfreqs, freq_bands)
+        if epoch >= 23:
+            # Engagement index beta/(alpha + theta)
+            engagement, workload = get_engagement_workload(
+                psds[epoch, :, :], nfreqs, freq_bands)
 
-        for i in range(len(labels)):
-            if i == 0:
-                mne.viz.plot_topomap(engagement,
-                                     pos=info,
-                                     axes=ax[i],
-                                     show=False,
-                                     cmap='viridis')
-                ax[i].set_ylabel(labels[i])
-                ax[i].title.set_text(title[i])
-            else:
-                mne.viz.plot_topomap(workload,
-                                     pos=info,
-                                     axes=ax[i],
-                                     show=False,
-                                     cmap='viridis')
-                ax[i].set_ylabel(labels[i])
-                ax[i].title.set_text(title[i])
+            for i in range(len(labels)):
+                if i == 0:
+                    mne.viz.plot_topomap(engagement,
+                                         pos=info,
+                                         axes=ax[i],
+                                         show=False,
+                                         cmap='viridis')
+                    ax[i].set_ylabel(labels[i])
+                    ax[i].title.set_text(title[i])
+                else:
+                    mne.viz.plot_topomap(workload,
+                                         pos=info,
+                                         axes=ax[i],
+                                         show=False,
+                                         cmap='viridis')
+                    ax[i].set_ylabel(labels[i])
+                    ax[i].title.set_text(title[i])
 
-        plt.pause(0.01)
-        for i in range(len(labels)):
-            ax[i].cla()
+            plt.pause(1)
+            for i in range(len(labels)):
+                ax[i].cla()

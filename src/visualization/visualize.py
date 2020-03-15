@@ -117,7 +117,15 @@ def eye_features_visualize(models, dataframe, features, independent):
     return None
 
 
-def animate_bar_plot(config, subject, outcome):
+def animate_bar_plot(config, subject, session):
+    session_name = {
+        'S001': 'baseline',
+        'S002': 'static_red',
+        'S003': 'dynamic_red',
+        'S004': 'static_red_smoke',
+        'S005': 'dynamic_red_smoke'
+    }
+
     # Default plot settings
     _plot_settings()
 
@@ -133,33 +141,39 @@ def animate_bar_plot(config, subject, outcome):
 
     eeg_subject_df = eeg_dataframe[eeg_dataframe['subject'] == subject]
     eeg_complexity_df = eeg_subject_df[eeg_subject_df['complexity'] ==
-                                       'dynamic_red_smoke']
+                                       session_name[session]]
 
-    data = eeg_complexity_df[[
-        'prob_distraction', 'prob_low_eng', 'prob_high_eng',
-        'prob_ave_workload'
-    ]].values
+    data = eeg_complexity_df[['prob_high_eng', 'prob_ave_workload']].values
 
     # Plotting
-    fig, ax = plt.subplots(figsize=[8, 5])
+    fig, ax = plt.subplots(2, 1, figsize=[2.25, 10])
     colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56']
     for i, value in enumerate(data):
-        plt.bar([
-            'Distraction', 'Low \n Engagement', 'High\n Engagement',
-            'Avg\n Mental Workload'
-        ],
-                value,
-                color=colors,
-                edgecolor='k',
-                width=0.5)
-        plt.ylim([0, 1.0])
-        plt.ylabel('Probability')
-        plt.xlabel('Cognitive States')
-        plt.pause(1)
-        plt.tight_layout()
-        plt.cla()
-        if i == 0:
-            time.sleep(20)
+        if i >= 23:
+            ax[0].bar(['High\n Engagement'],
+                      value[0],
+                      color=colors[0],
+                      edgecolor='k',
+                      width=0.5)
+            ax[0].set_ylim([0, 1.0])
+            ax[0].grid(True)
+            plt.tight_layout()
+            plt.subplots_adjust(left=0.30, right=0.9, top=0.9, bottom=0.1)
+            ax[0].set_ylabel('Probability')
+            ax[1].bar(['Avg\n Mental Workload'],
+                      value[1],
+                      color=colors[1],
+                      edgecolor='k',
+                      width=0.5)
+            plt.ylim([0, 1.0])
+            plt.grid(True)
+            plt.ylabel('Probability')
+            plt.xlabel('Cognitive States')
+            plt.pause(2)
+            ax[0].cla()
+            ax[1].cla()
+            if i == 0:
+                time.sleep(1)
 
 
 def draw_fixation_in_map_coor(fixations, animate=True):

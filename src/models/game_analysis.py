@@ -7,6 +7,8 @@ import networkx as nx
 from scipy import spatial
 import matplotlib.pyplot as plt
 
+from data.utils import nested_dict
+
 from features.game_features import _initial_nodes_setup
 from features.utils import findkeys
 
@@ -111,16 +113,31 @@ def _get_user_actions(config, subject, session, use_resume=False):
     return actions
 
 
-def _get_platoon_node_position(config, subject, session, complexity=False):
-    if complexity:
-        subject_group = ''.join([
-            '/sub-OFS_', subject, '/', session, '/game_features',
-            '/complexity_states'
-        ])
-    else:
-        subject_group = ''.join(
-            ['/sub-OFS_', subject, '/', session, '/game_features', '/states'])
+def _get_complexity_node_position(config, subject, session):
+    subject_group = ''.join([
+        '/sub-OFS_', subject, '/', session, '/game_features',
+        '/complexity_states'
+    ])
+    read_path = Path(__file__).parents[2] / config['offset_features_path']
+    states = dd.io.load(read_path, group=subject_group)
 
+    # Node position
+    nodes_pos = _initial_nodes_setup(config)
+    nodes_pos = nodes_pos - nodes_pos[48, :]
+    nodes_kd_tree = spatial.KDTree(nodes_pos)
+    centroid_pos = numpy.array(list(findkeys(states, 'centroid_pos')), ndmin=2)
+
+    # Get node index and reshape to 6 by m
+    node_index = nodes_kd_tree.query(centroid_pos, k=1)[1]
+    n_ele = len(node_index) - int(len(node_index) // 6) * 6
+    node_index = node_index[n_ele:].reshape(6, -1, order='F')
+
+    return node_index
+
+
+def _get_platoon_node_position(config, subject, session):
+    subject_group = ''.join(
+        ['/sub-OFS_', subject, '/', session, '/game_features', '/states'])
     read_path = Path(__file__).parents[2] / config['offset_features_path']
     states = dd.io.load(read_path, group=subject_group)
 
@@ -130,12 +147,27 @@ def _get_platoon_node_position(config, subject, session, complexity=False):
     nodes_kd_tree = spatial.KDTree(nodes_pos)
 
     centroid_pos = numpy.array(list(findkeys(states, 'centroid_pos')), ndmin=2)
+
     # Get node index and reshape to 6 by m
     node_index = nodes_kd_tree.query(centroid_pos, k=1)[1]
     n_ele = len(node_index) - int(len(node_index) // 6) * 6
     node_index = node_index[n_ele:].reshape(6, -1, order='F')
 
     return node_index
+
+
+def _target_check(config):
+    for subject in config['subjects']:
+        for session in config['sessions']:
+            # Get the target building
+            subject_group = ''.join([
+                '/sub-OFS_', subject, '/', session, '/',
+                'game_features/target_building'
+            ])
+            read_path = Path(
+                __file__).parents[2] / config['offset_features_path']
+            target_id = dd.io.load(read_path, group=subject_group)
+            print(target_id)
 
 
 def game_features_analysis(config, features):
@@ -162,12 +194,38 @@ def game_features_analysis(config, features):
 
 
 def graph_with_user_actions(config, subject, session):
-    selected_nodes = _get_user_actions(config, subject, session)
-    complexity_nodes = _get_platoon_node_position(config,
-                                                  subject,
-                                                  session,
-                                                  complexity=True)
-    platoon_nodes = _get_platoon_node_position(config, subject, session)
+    data = nested_dict()
+    temp = {}
+    for session in config['sessions']:
+        print(subject, session)
+        selected_nodes = _get_user_actions(config, subject, session)
+        platoon_nodes = _get_platoon_node_position(config, subject, session)
+        complexity_nodes = _get_complexity_node_position(
+            config, subject, session)
+
+        temp['selected_nodes'] = selected_nodes
+        temp['platoon_nodes'] = platoon_nodes
+        temp['complexity_nodes'] = complexity_nodes
+
+        # Get the target building
+        subject_group = ''.join([
+            '/sub-OFS_', subject, '/', session, '/',
+            'game_features/target_building'
+        ])
+        read_path = Path(__file__).parents[2] / config['offset_features_path']
+        target_id = dd.io.load(read_path, group=subject_group)
+        temp['target_id'] = target_id
+
+        data['sub-OFS_' + subject][session] = temp
+
+    dd.io.save('Offensive.h5', data)
+
+    # print(a)
+    # print(subject, session)
+
+    # selected_nodes = _get_user_actions(config, subject, session)
+    # platoon_nodes = _get_platoon_node_position(config, subject, session)
+    # complexity_nodes = _get_complexity_node_position(config, subject, session)
 
     # Get the target building
     subject_group = ''.join([
@@ -198,10 +256,10 @@ def graph_with_user_actions(config, subject, session):
         for i, (node,
                 complex_node) in enumerate(zip(platoon_node, complexity_node)):
             if i >= 3:
-                G.nodes[node]['node_color'] = '#519D3E'
+                G.nodes[node]['node_color'] = '#4A7DB3'
                 G.nodes[node]['node_weight'] = 500
             else:
-                G.nodes[node]['node_color'] = '#4A7DB3'
+                G.nodes[node]['node_color'] = '#519D3E'
                 G.nodes[node]['node_weight'] = 500
 
             G.nodes[complex_node]['node_color'] = '#D2352B'
@@ -230,17 +288,3 @@ def game_with_platoons(config, subject, session, complexity=False):
     centroid_pos = numpy.array(list(findkeys(states, 'centroid_pos')), ndmin=2)
     centroid_pos = centroid_pos.reshape(-1, 6, 2)
     return centroid_pos
-
-
-def _target_check(config):
-    for subject in config['subjects']:
-        for session in config['sessions']:
-            # Get the target building
-            subject_group = ''.join([
-                '/sub-OFS_', subject, '/', session, '/',
-                'game_features/target_building'
-            ])
-            read_path = Path(
-                __file__).parents[2] / config['offset_features_path']
-            target_id = dd.io.load(read_path, group=subject_group)
-            print(target_id)

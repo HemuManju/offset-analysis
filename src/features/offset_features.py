@@ -11,8 +11,8 @@ def extract_offset_features(config):
         features = nested_dict()
 
         # Read individual difference
-        # features['individual_difference'] = extract_individual_features(
-        #     config, subject)
+        features['individual_difference'] = extract_individual_features(
+            config, subject)
 
         for session in config['sessions']:
             print(subject, session)
