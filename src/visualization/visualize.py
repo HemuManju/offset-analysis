@@ -24,13 +24,13 @@ def _plot_settings():
     ax : matplotlib ax object
 
     """
+    plt.style.use('clean')
     plt.rcParams.update({'font.family': "Arial"})
     plt.rcParams.update({'font.size': 14})
     plt.rcParams['axes.labelweight'] = 'bold'
+    plt.rcParams['axes.titleweight'] = 'bold'
     plt.rcParams['pdf.fonttype'] = 42
     plt.rc('axes', axisbelow=True)
-    sns.axes_style("ticks")
-
     return None
 
 
@@ -66,6 +66,8 @@ def image_sequence(config):
 
 def eeg_features_visualize(models, dataframe, features, independent):
 
+    _plot_settings()
+
     # colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
     title = [
         'Distraction', 'Low Engagement', 'High Engagement',
@@ -81,12 +83,13 @@ def eeg_features_visualize(models, dataframe, features, independent):
             'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
             'Static red\n team', 'Static red\n team with smoke'
         ])
+        ax.set_ylim([0, 1])
         plt.ylabel('Probability')
         plt.xlabel('Complexities')
         plt.title(title[i])
-        plt.grid(True)
+        # plt.grid(True)
         plt.tight_layout(pad=0)
-
+    plt.savefig('test.pdf', dpi=150)
     plt.show()
     return None
 

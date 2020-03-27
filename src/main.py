@@ -46,7 +46,7 @@ with skip_run('skip', 'Save the EEG to B-alert') as check, check():
 with skip_run('skip', 'Save the clean EEG to B-alert') as check, check():
     write_mne_to_b_alert_edf(config, clean_with_ica=True, save_data=True)
 
-with skip_run('run', 'OFFSET feature extraction') as check, check():
+with skip_run('skip', 'OFFSET feature extraction') as check, check():
     offset_features = extract_offset_features(config)
     save_path = Path(__file__).parents[1] / config['offset_features_path']
     save_dataset(str(save_path), offset_features, save=True)

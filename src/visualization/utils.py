@@ -11,7 +11,6 @@ def plot_settings():
     ax : matplotlib ax object
 
     """
-
     plt.rcParams.update({'font.family': "Arial"})
     plt.rcParams.update({'font.size': 18})
     plt.rcParams['axes.labelweight'] = 'bold'
