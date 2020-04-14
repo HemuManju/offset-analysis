@@ -1,12 +1,12 @@
-from pathlib import Path
-
 import mne
-import deepdish as dd
 from autoreject import AutoReject, compute_thresholds
+
+from data.extract_data import read_xdf_eeg_data
+
 import collections
 
 
-def autoreject_repair_epochs(epochs, reject_plot=False):
+def _autoreject_repair_epochs(epochs, reject_plot=False):
     """Rejects the bad epochs with AutoReject algorithm
 
     Parameter
@@ -36,7 +36,7 @@ def autoreject_repair_epochs(epochs, reject_plot=False):
     return repaired_epochs
 
 
-def append_eog_index(epochs, ica):
+def _append_eog_index(epochs, ica):
     """Detects the eye blink aritifact indices and adds that information to ICA
 
     Parameter
@@ -68,7 +68,7 @@ def append_eog_index(epochs, ica):
     return ica
 
 
-def clean_with_ica(raw_eeg, config, show_ica=False):
+def _clean_with_ica(raw_eeg, config, show_ica=False, apply_on_epoch=False):
     """Clean epochs with ICA.
 
     Parameter
@@ -115,7 +115,7 @@ def clean_with_ica(raw_eeg, config, show_ica=False):
     ica.fit(epochs, picks=picks, reject=reject_threshold, tstep=epoch_length)
 
     # Extra caution to detect the eye blinks
-    ica = append_eog_index(epochs, ica)  # Append the eog index to ICA
+    ica = _append_eog_index(epochs, ica)  # Append the eog index to ICA
 
     # mne pipeline to detect artifacts
     ica.detect_artifacts(epochs, eog_criterion=range(2))
@@ -123,45 +123,43 @@ def clean_with_ica(raw_eeg, config, show_ica=False):
     if show_ica:
         ica.plot_components(inst=epochs)
 
-    cleaned_eeg_epochs = ica.apply(epochs)  # Apply the ICA on raw EEG
-    return cleaned_eeg_epochs, ica
+    if apply_on_epoch:
+        cleaned_eeg = ica.apply(epochs)  # Apply the ICA on Epoch EEG
+    else:
+        cleaned_eeg = ica.apply(raw_eeg)  # Apply the ICA on raw EEG
+
+    return cleaned_eeg, ica
 
 
-def clean_eeg_data(subjects, sessions, config):
+def clean_eeg_data(config):
     """Create cleaned dataset (by running autoreject and ICA)
     with each subject data in a dictionary.
 
     Parameter
     ----------
-    subject : string of subject ID e.g. 7707
-    sessions  : HighFine, HighGross, LowFine, LowGross
+    config : The configuration file
+
     Returns
     ----------
     cleaned_eeg_dataset : dataset of all the subjects with different conditions
 
     """
     cleaned_eeg_dataset = {}
-    read_path = Path(__file__).parents[2] / config['raw_offset_dataset']
 
-    for subject in subjects:
+    for subject in config['subjects']:
         data = collections.defaultdict(dict)
-        for session in sessions:
-            print(subject, session)
-
+        for session in config['sessions']:
             # Read only the eeg data
-            group = '/sub-OFS_' + '/'.join([subject, session, 'eeg_features'])
-            eeg_data = dd.io.load(str(read_path), group=group)
-            raw_eeg = eeg_data['data']
-            time_stamps = eeg_data['time_stamps']
+            raw_eeg, time_stamps = read_xdf_eeg_data(config, subject, session)
 
             # Clean the EEG epochs
-            cleaned_eeg, ica = clean_with_ica(raw_eeg, config, show_ica=False)
-            cleaned_eeg.plot(block=True)
+            cleaned_eeg, ica = _clean_with_ica(raw_eeg, config, show_ica=False)
 
             # Populate the dictionary
             data[session]['cleaned_eeg'] = cleaned_eeg
             data[session]['ica'] = ica
             data[session]['time_stamps'] = time_stamps
 
+        # Append the data
         cleaned_eeg_dataset['sub-OFS_' + subject] = data
     return cleaned_eeg_dataset

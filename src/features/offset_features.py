@@ -16,6 +16,32 @@ def extract_offset_features(config):
 
         for session in config['sessions']:
             print(subject, session)
+
+            # Read eye features
+            features[session]['eye_features'] = extract_eye_features(
+                config, subject, session)
+
+            # Read eeg features
+            features[session]['eeg_features'] = extract_b_alert_features(
+                config, subject, session)
+
+            # Read game features
+            features[session]['game_features'] = extract_game_features(
+                config, subject, session)
+
+        offset_features['sub-OFS_' + subject] = features
+
+    return offset_features
+
+
+def extract_synched_features(config):
+    offset_features = {}
+    for subject in config['subjects']:
+        features = nested_dict()
+
+        for session in config['sessions']:
+            print(subject, session)
+
             # Read eye features
             features[session]['eye_features'] = extract_eye_features(
                 config, subject, session)

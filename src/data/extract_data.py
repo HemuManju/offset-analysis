@@ -1,7 +1,6 @@
 import pyxdf
 import numpy as np
 import pandas as pd
-
 import ujson
 
 from .mne_import_xdf import read_raw_xdf

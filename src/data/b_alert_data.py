@@ -4,7 +4,6 @@ import mne
 from autoreject import get_rejection_threshold
 
 from .extract_data import read_xdf_eeg_data
-from .clean_data import clean_with_ica
 from .mne_write_edf import write_edf
 
 
@@ -63,16 +62,13 @@ def decontaminate_eeg(raw_eeg, config, ica_clean):
                                                random_state=42)
     flat_threshold = dict(eeg=1e-6)
 
-    if ica_clean:
-        decon_eeg, _ = clean_with_ica(raw_eeg, config, show_ica=False)
-    else:
-        # Drop the bad amplitude segments
-        epochs.drop_bad(reject=reject_threshold, flat=flat_threshold)
+    # Drop the bad amplitude segments
+    epochs.drop_bad(reject=reject_threshold, flat=flat_threshold)
 
-        # Convert the data to mne Raw format
-        data = epochs.get_data().transpose(1, 0, 2).reshape(20, -1)
-        info = epochs.info
-        decon_eeg = mne.io.RawArray(data, info)
+    # Convert the data to mne Raw format
+    data = epochs.get_data().transpose(1, 0, 2).reshape(20, -1)
+    info = epochs.info
+    decon_eeg = mne.io.RawArray(data, info)
     return decon_eeg
 
 

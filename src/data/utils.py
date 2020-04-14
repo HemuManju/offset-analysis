@@ -19,7 +19,7 @@ def save_dataset(path, dataset, save):
 
     """
     if save:
-        dd.io.save(path, dataset)
+        dd.io.save(path, dataset, compression=('blosc', 5))
 
     return None
 

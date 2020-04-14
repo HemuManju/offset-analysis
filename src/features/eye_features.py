@@ -60,3 +60,7 @@ def extract_eye_features(config, subject, session):
     # Calculate the features
     eye_data = _compute_eye_features(eye_epochs, time_stamps)
     return eye_data
+
+
+def extract_sync_eye_features(config, subject, session):
+    pass

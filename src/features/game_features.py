@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import numpy as np
+import deepdish as dd
 from scipy.spatial import distance
 
 from data.extract_data import read_xdf_game_data
@@ -110,6 +113,28 @@ def _get_casualities(game_epochs):
     else:
         causalities = [[0] * 3, [0] * 3]  # 3 UGV and 3 UAV
     return causalities
+
+
+def _read_game_data(config, subject, session):
+    read_path = Path(__file__).parents[2] / config['offset_features_path']
+    subject_group = '/sub-OFS_' + '/'.join([subject, session, 'game_features'])
+
+    # Read game states
+    read_group = subject_group + '/game_state'
+    game_state = dd.io.load(read_path, group=read_group)
+
+    # Read game time stamps
+    read_group = subject_group + '/time_stamps'
+    time_stamps = dd.io.load(read_path, group=read_group)
+
+    # Read game time stamps kd tree
+    read_group = subject_group + '/time_kd_tree'
+    time_kd_tree = dd.io.load(read_path, group=read_group)
+
+    # Make sure they are of equal length
+    assert len(game_state) == len(time_stamps), 'Data are of different length'
+
+    return game_state, time_stamps, time_kd_tree
 
 
 def extract_game_features(config, subject, session):

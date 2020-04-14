@@ -31,19 +31,20 @@ map_data_path: 'data/processed/map_data/'
 
 ##---------------------------------------------------------------------##
 # Experiment 0
-# In the experiment the data is epoched at fixed length (1 second)
+# In the experiment the epoch length is calculate using gamma dist
 epoch_length: 1.0
+cropping_length: 6.0
 freq_bands: [[4, 7], [8, 13], [14, 35], [35, 45]]
 
 # Raw data path
-raw_offset_dataset: 'data/processed/offset_features_exp_0_dataset.h5'
+raw_offset_dataset: 'data/interim/raw_offset_exp_0_dataset.h5'
 raw_eeg_dataset: 'data/interim/raw_eeg_exp_0_dataset.h5'
 raw_eye_dataset: 'data/interim/raw_eye_exp_0_dataset.h5'
 
 # Cleaned and features data path
-clean_eeg_dataset: 'data/processed/clean_eeg_exp_0_dataset.h5'
-eeg_features_path: 'data/processed/eeg_features_exp_0_dataframe.h5'
-eye_features_path: 'data/processed/eye_features_exp_0_dataframe.h5'
+clean_eeg_dataset: 'data/processed/eeg_eye_analysis/clean_eeg_exp_0_dataset.h5'
+eeg_features_path: 'data/processed/eeg_eye_analysis/eeg_features_exp_0_dataframe.h5'
+eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_0_dataframe.h5'
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
