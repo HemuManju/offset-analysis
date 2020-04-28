@@ -2,10 +2,14 @@ from pathlib import Path
 
 import numpy as np
 import deepdish as dd
-from scipy.spatial import distance
+from scipy.spatial import distance, KDTree
+
+import matplotlib.pyplot as plt
 
 from data.extract_data import read_xdf_game_data
-from .utils import findkeys, _time_kd_tree
+
+from recreate.action_manager import ActionManager
+from .utils import findkeys
 
 
 def _initial_nodes_setup(config):
@@ -21,8 +25,8 @@ def _initial_nodes_setup(config):
     return position_data
 
 
-def _get_selected_node(game_epochs, node_position):
-    user_input = list(findkeys(game_epochs, 'user_input'))
+def _get_selected_node(game_data, node_position):
+    user_input = list(findkeys(game_data, 'user_input'))
     target_pos = list(findkeys(user_input, 'target_pos'))
     node_index = []
     node_pos = []
@@ -39,7 +43,7 @@ def _get_selected_node(game_epochs, node_position):
     return node_index, node_pos
 
 
-def _get_target_building(game_epochs, node_position):
+def _get_target_building(game_data, node_position):
     target_buildings = {
         0: 38,
         1: 39,
@@ -51,7 +55,7 @@ def _get_target_building(game_epochs, node_position):
          [21.99375, 189.26222222], [-40.32225, 178.85333333]],
         ndmin=2)
     # Find the platoon centroid
-    states = list(findkeys(game_epochs, 'state'))
+    states = list(findkeys(game_data, 'state'))
     ugv_group = list(findkeys(states, 'ugv'))
     ugv_centroid = list(findkeys(ugv_group, 'centroid_pos'))
     centroid_pos = np.array(ugv_centroid, ndmin=2)
@@ -66,7 +70,7 @@ def _get_target_building(game_epochs, node_position):
         idx = target_buildings[int(row_idx[time_stamp] % 4)]
     except ValueError:
         idx = 0
-        user_selected, _ = _get_selected_node(game_epochs, node_position)
+        user_selected, _ = _get_selected_node(game_data, node_position)
 
     if idx in [38, 39, 40, 51]:
         target_id = idx
@@ -75,8 +79,8 @@ def _get_target_building(game_epochs, node_position):
     return target_id
 
 
-def _get_selected_platoons(game_epochs):
-    selected_list = list(findkeys(game_epochs, 'selected'))
+def _get_selected_platoons(game_data):
+    selected_list = list(findkeys(game_data, 'selected'))
     selection_key = []
     for i, selected in enumerate(selected_list):
         if selected:
@@ -85,22 +89,45 @@ def _get_selected_platoons(game_epochs):
     return selection_key
 
 
-def _get_map_pos(game_epochs):
-    map_pos = list(findkeys(game_epochs, 'map_pos'))
+def _get_map_pos(game_data):
+    map_pos = list(findkeys(game_data, 'map_pos'))
     return map_pos
 
 
-def _get_states(game_epochs, complexity):
+def _get_states(game_data, complexity, session=None):
     if complexity:
-        states = list(findkeys(game_epochs, 'complexity_state'))
+        states = list(findkeys(game_data, 'complexity_state'))
+        if not states or True:
+            blue_states = list(findkeys(game_data, 'state'))
+
+            # Get when to update
+            centroid_pos = np.array(list(findkeys(blue_states,
+                                                  'centroid_pos')),
+                                    ndmin=2)
+            n_ele = len(centroid_pos) - int(len(centroid_pos) // 6) * 6
+            centroid_pos = centroid_pos[n_ele:, :].reshape(-1, 12)
+            diff = np.diff(centroid_pos, axis=0)
+            norm = np.linalg.norm(diff, axis=1) > 10e-2
+            updates = np.insert(norm, 0, True).tolist()
+
+            if session in ['S003', 'S005']:
+                team_type = 'dynamic'
+            else:
+                team_type = 'static'
+
+            # Instantiate the action manager
+            action_manager = ActionManager(team_type)
+            game_states = list(findkeys(game_data, 'game'))
+            states = action_manager.recreate_states(blue_states, game_states,
+                                                    updates)
     else:
-        states = list(findkeys(game_epochs, 'state'))
+        states = list(findkeys(game_data, 'state'))
     return states
 
 
-def _get_casualities(game_epochs):
+def _get_casualities(game_data):
     causalities = []
-    states = list(findkeys(game_epochs, 'state'))
+    states = list(findkeys(game_data, 'state'))
     if states:
         # Extract UAV and UGV group
         uav_group = list(findkeys(states[-1], 'uav'))
@@ -117,44 +144,157 @@ def _get_casualities(game_epochs):
 
 def _read_game_data(config, subject, session):
     read_path = Path(__file__).parents[2] / config['offset_features_path']
-    subject_group = '/sub-OFS_' + '/'.join([subject, session, 'game_features'])
+    read_group = '/sub-OFS_' + '/'.join([subject, session, 'game_features'])
 
-    # Read game states
-    read_group = subject_group + '/game_state'
-    game_state = dd.io.load(read_path, group=read_group)
+    # Read game data
+    game_data = dd.io.load(read_path, group=read_group)
+    return game_data
 
-    # Read game time stamps
-    read_group = subject_group + '/time_stamps'
-    time_stamps = dd.io.load(read_path, group=read_group)
 
-    # Read game time stamps kd tree
-    read_group = subject_group + '/time_kd_tree'
-    time_kd_tree = dd.io.load(read_path, group=read_group)
+def _get_complexity_node_index(config, game_data):
+    # Get the complexity states
+    co_states = game_data['complexity_states']
 
-    # Make sure they are of equal length
-    assert len(game_state) == len(time_stamps), 'Data are of different length'
+    # Node position
+    nodes_pos = _initial_nodes_setup(config)
+    nodes_pos = nodes_pos - nodes_pos[48, :]
+    nodes_kd_tree = KDTree(nodes_pos)
+    centroid_pos = np.array(list(findkeys(co_states, 'centroid_pos')), ndmin=2)
 
-    return game_state, time_stamps, time_kd_tree
+    # Get node index and reshape to 6 by m
+    node_index = nodes_kd_tree.query(centroid_pos, k=1)[1]
+    n_ele = len(node_index) - int(len(node_index) // 6) * 6
+    node_index = node_index[n_ele:].reshape(6, -1, order='F')
+
+    return node_index
+
+
+def _extract_action_info(game_data):
+
+    # Find pauses and resumes
+    game_state = game_data['game_state']
+    pauses = list(findkeys(game_state, 'pause'))
+    resumes = list(findkeys(game_state, 'resume'))
+
+    # Get game time stamps
+    game_time_stamps = game_data['time_stamps']
+    pause_time_stamps, resume_time_stamps = [], []
+
+    # TODO: Need to implement in a robust way
+    # The last element is not pause
+    for i, (pause, resume) in enumerate(zip(pauses, resumes)):
+        if pause and not pauses[i - 1]:
+            pause_time_stamps.append(game_time_stamps[i])
+        if pause and not pauses[i + 1]:
+            resume_time_stamps.append(game_time_stamps[i])
+    assert len(pause_time_stamps) == len(
+        resume_time_stamps), 'Length is different'
+
+    # Find the difference between pause and resume
+    epoch_lengths = [
+        rt - pt for rt, pt in zip(resume_time_stamps, pause_time_stamps)
+    ]
+
+    # Return epoch length and pauses
+    return pause_time_stamps, resume_time_stamps, epoch_lengths
+
+
+def compute_option_type(config, subject, session):
+    # Read the game data
+    game_data = _read_game_data(config, subject, session)
+
+    # Target nodes
+    target_nodes = [38, 39, 40, 51]
+
+    # Complexity nodes
+    complexity_nodes = _get_complexity_node_index(config, game_data)
+
+    # Pause and resume time stamps
+    _, resume_time_stamps, _ = _extract_action_info(game_data)
+
+    # User actions
+    user_selected_nodes = game_data['selected_node']
+
+    # Option used by the subjects
+    option_type = []
+    time_stamps = game_data['time_stamps'].tolist()
+    for time_stamp in resume_time_stamps:
+
+        # User selection after the resume
+        time_id = time_stamps.index(time_stamp)
+        selected_node = user_selected_nodes[time_id]
+
+        # Check with three cases
+        # print(complexity_nodes[:, time_id])
+        if selected_node in target_nodes:
+            option_type.append('target_option')
+        elif selected_node in complexity_nodes[:, time_id]:
+            option_type.append('engage_option')
+        else:
+            option_type.append('caution_option')
+    return option_type
 
 
 def extract_game_features(config, subject, session):
-    game_data = {}
-    node_position = _initial_nodes_setup(config)
+    game_features = {}
+    # node_position = _initial_nodes_setup(config)
 
     # Read the game epochs
-    game_epochs, time_stamps = read_xdf_game_data(config, subject, session)
-    node_index, node_pos = _get_selected_node(game_epochs, node_position)
-    game_data['selected_node'] = node_index
-    game_data['selected_node_pos'] = node_pos
-    game_data['time_stamps'] = time_stamps
-    game_data['casualities'] = _get_casualities(game_epochs)
-    game_data['platoon_selected'] = _get_selected_platoons(game_epochs)
-    game_data['game_state'] = list(findkeys(game_epochs, 'game'))
-    game_data['map_pos'] = _get_map_pos(game_epochs)
-    game_data['complexity_states'] = _get_states(game_epochs, complexity=True)
-    game_data['states'] = _get_states(game_epochs, complexity=False)
-    game_data['target_building'] = _get_target_building(
-        game_epochs, node_position)
-    game_data['time_kd_tree'] = _time_kd_tree(np.array(time_stamps, ndmin=2).T)
+    game_data, time_stamps = read_xdf_game_data(config, subject, session)
 
-    return game_data
+    # test = list(findkeys(game_data, 'complexity_state'))
+    # ugv_1 = list(findkeys(test, 'ugv_p_1'))
+    # cent_ext = np.array(list(findkeys(ugv_1, 'centroid_pos')), ndmin=2)
+    # dl = np.linalg.norm(np.diff(cent_ext, axis=0), axis=1)
+    # idx = np.logical_and((dl > 0), (dl < 10))
+    # dl = dl[idx]
+    # # print(dl)
+    # dt = np.diff(time_stamps, axis=0)[idx]
+    # # print(dt)
+
+    # print(dl.mean())
+
+    # print(a)
+
+    # node_index, node_pos = _get_selected_node(game_data, node_position)
+    # game_features['selected_node'] = node_index
+    # game_features['selected_node_pos'] = node_pos
+    # game_features['time_stamps'] = time_stamps
+    # game_features['casualities'] = _get_casualities(game_data)
+    # game_features['platoon_selected'] = _get_selected_platoons(game_data)
+    # game_features['game_state'] = list(findkeys(game_data, 'game'))
+    # game_features['map_pos'] = _get_map_pos(game_data)
+    game_features['complexity_states'] = _get_states(game_data,
+                                                     complexity=True,
+                                                     session=session)
+    # game_features['states'] = _get_states(game_data, complexity=False)
+    # game_features['target_building'] = _get_target_building(
+    #     game_data, node_position)
+    # game_features['time_kd_tree'] = _time_kd_tree(
+    #     np.array(time_stamps, ndmin=2).T)
+
+    # Testing
+    ugv_1 = list(findkeys(game_features['complexity_states'], 'ugv_p_2'))
+    cent_cal = np.array(list(findkeys(ugv_1, 'centroid_pos')), ndmin=2)
+
+    test = list(findkeys(game_data, 'complexity_state'))
+    ugv_1 = list(findkeys(test, 'ugv_p_2'))
+    cent_ext = np.array(list(findkeys(ugv_1, 'centroid_pos')), ndmin=2)
+
+    print(cent_cal.shape, cent_ext.shape)
+
+    idx = cent_ext[:, 0] > -100
+
+    print(cent_cal[0:10, :], cent_ext[0:10, :])
+
+    # dists = np.linalg.norm(cent_cal[idx, :] - cent_cal[idx, :], axis=1)
+    fig, ax = plt.subplots()
+    for d1, d2 in zip(cent_cal[idx, :], cent_ext[idx, :]):
+        ax.scatter(d1[0], d1[1], marker='o', s=50)
+        ax.scatter(d2[0], d2[1], marker='s')
+        ax.set_ylim([50, 150])
+        ax.set_xlim([0, 80])
+        plt.pause(0.01)
+        plt.cla()
+
+    return None  #game_features['complexity_states'], test
