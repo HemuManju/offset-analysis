@@ -1,5 +1,6 @@
 import collections
 
+import numpy as np
 from scipy.stats import gamma
 from scipy import spatial
 
@@ -16,11 +17,22 @@ def findkeys(var, key):
             yield from findkeys(d, key)
 
 
+def find_nearest_time_stamp(time_kd_tree, query_time):
+    query_time = np.array(query_time, ndmin=2)
+    nearest_t_id = time_kd_tree.query(query_time, k=1)[1]
+
+    # Save index and value in a dictionary
+    nearest_t_stamp = {}
+    nearest_t_stamp['time'] = time_kd_tree.data[nearest_t_id].flatten()[0]
+    nearest_t_stamp['id'] = nearest_t_id[0]
+    return nearest_t_stamp
+
+
 def nested_dict():
     return collections.defaultdict(nested_dict)
 
 
-def _time_kd_tree(time_stamps):
+def construct_time_kd_tree(time_stamps):
     time_tree = spatial.KDTree(time_stamps)
     return time_tree
 

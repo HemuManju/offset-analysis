@@ -1,14 +1,18 @@
-# from pathlib import Path
-# import deepdish as dd
-
-import numpy
+import numpy as np
 import pandas as pd
 import seaborn as sns
+import mne
+from mne.time_frequency import psd_multitaper
+
 import matplotlib.pyplot as plt
 
-from .game_features import _read_game_data
+from data.extract_data import read_xdf_eeg_data
 
-from .utils import findkeys, gamma_percentile
+from .clean_eeg_data import _clean_with_ica, _filter_eeg
+from .game_features import _extract_action_info
+
+from .utils import (gamma_percentile, construct_time_kd_tree,
+                    find_nearest_time_stamp)
 
 
 def extract_b_alert_features(config, subject, session):
@@ -40,69 +44,81 @@ def extract_b_alert_features(config, subject, session):
     return b_alert_features
 
 
-def _compute_engagement_level(epochs):
-    raise NotImplementedError
+def _compute_engagement_index(epochs, config):
+    picks = mne.pick_types(epochs.info, eeg=True)
+    ch_names = epochs.ch_names[picks[0]:picks[-1] + 1]
+    psds, freqs = psd_multitaper(epochs,
+                                 fmin=1.0,
+                                 fmax=64.0,
+                                 picks=picks,
+                                 n_jobs=6,
+                                 verbose=False,
+                                 normalization='full')
+
+    psd_band = []
+    for freq_band in config['freq_bands']:
+        psd_band.append(psds[:, :, (freqs >= freq_band[0]) &
+                             (freqs < freq_band[1])].mean(axis=-1))
+    # Form pandas dataframe
+    data = np.concatenate(psd_band, axis=1)
+    columns = [x + '_' + y for x in ch_names for y in config['band_names']]
+    power_df = pd.DataFrame(data, columns=columns)
+
+    # Engagement level; Feature Beta/(Alpha + Theta)
+    num_bands = ['lower_Beta']
+    num_electrodes = ch_names
+    den_bands = ['Theta', 'total_Alpha']
+    den_electrodes = ch_names
+    numerator_features = [
+        electrode + '_' + band for electrode in num_electrodes
+        for band in num_bands
+    ]
+    denominator_features = [
+        electrode + '_' + band for electrode in den_electrodes
+        for band in den_bands
+    ]
+    alpha = [
+        col for col in power_df[denominator_features].columns if 'Alpha' in col
+    ]
+    theta = [
+        col for col in power_df[denominator_features].columns if 'Theta' in col
+    ]
+    beta_alpha_theta = power_df[numerator_features].mean(
+        axis=1) / (power_df[alpha].mean(axis=1) + power_df[theta].mean(axis=1))
+    return beta_alpha_theta.values
 
 
 def _compute_coherence(epochs):
     raise NotImplementedError
 
 
-def _compute_epoch_info(config, subject, session):
-    # Get the game
-    game_state, game_time_stamps, time_kd_tree = _read_game_data(
-        config, subject, session)
-    pauses = list(findkeys(game_state, 'pause'))
-    resumes = list(findkeys(game_state, 'resume'))
+def _compute_eeg_features(cropped_eeg, config):
+    epoch_length = config['epoch_length']
+    events = mne.make_fixed_length_events(cropped_eeg, duration=epoch_length)
+    epochs = mne.Epochs(cropped_eeg,
+                        events,
+                        picks=['eeg'],
+                        tmin=0,
+                        tmax=config['epoch_length'],
+                        baseline=(0, 0),
+                        verbose=False)
 
-    pause_time, resume_time = [], []
+    features = {}
+    features['engagement_index'] = _compute_engagement_index(epochs, config)
 
-    # TODO: Need to implement in a robust way
-    # The last element is not pause
-    for i, (pause, resume) in enumerate(zip(pauses, resumes)):
-        if pause and not pauses[i - 1]:
-            pause_time.append(game_time_stamps[i])
-        if pause and not pauses[i + 1]:
-            resume_time.append(game_time_stamps[i])
-    assert len(pause_time) == len(resume_time), 'Length is different'
-
-    # Find the difference
-    epoch_lengths = [rt - pt for rt, pt in zip(resume_time, pause_time)]
-
-    # Return epoch
-    return epoch_lengths
-
-
-def _compute_events(config, subject, session):
-    raise NotImplementedError
-
-
-def _get_action_type():
-    raise NotImplementedError
-
-
-def _sync_eeg_time(config, subject, session):
-    epoch_length = _compute_epoch_info(config, subject, session)
-    # print(epoch_length)
-
-    # Create events according to game state
-
-    # Get the EEG data and clean it with ICA
-
-    # Epoched data
-
-    return epoch_length
+    return features
 
 
 def _compute_time_threshold(config):
     time = []
     for subject in config['subjects']:
         for session in config['sessions']:
-            time.append(_sync_eeg_time(config, subject, session))
+            _, _, epoch_lengths = _extract_action_info(subject, session)
+            time.append(epoch_lengths)
 
-    time = numpy.array(sum(time, []))
+    time = np.array(sum(time, []))
     time = time[time <= 7.0]
-    print(numpy.min(time), numpy.max(time))
+    print(np.min(time), np.max(time))
     time_th = gamma_percentile(time, 0.99)
     print(time_th)
     sns.distplot(time)
@@ -110,9 +126,39 @@ def _compute_time_threshold(config):
     return None
 
 
-def extract_sync_eeg_features(config, subjects, sessions):
-    for subject in subjects:
-        for session in sessions:
-            pass
+def extract_sync_eeg_features(config, subject, session, option_type,
+                              option_time):
+    # Read subjects eye data
+    eeg_data, time_stamps = read_xdf_eeg_data(config, subject, session)
+    time_kd_tree = construct_time_kd_tree(np.array(time_stamps, ndmin=2).T)
 
-            # Sync the eeg time with game time
+    # Filter and clean the EEG data
+    filtered_eeg = _filter_eeg(eeg_data, config)
+    cleaned_eeg, ica = _clean_with_ica(filtered_eeg, config)
+
+    eeg_features = {}
+    eeg_features['target_option'] = []
+    eeg_features['engage_option'] = []
+    eeg_features['caution_option'] = []
+
+    for option, time in zip(option_type, option_time):
+        # Copy the cleaned eeg
+        temp_eeg = cleaned_eeg.copy()
+
+        # Find the nearest time stamp
+        nearest_time_stamp = find_nearest_time_stamp(time_kd_tree, time)
+
+        # Crop the data
+        start_time = nearest_time_stamp['time'] - time_stamps[0]
+        end_time = start_time + config['cropping_length']
+        cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)
+
+        # Extract the features
+        features = _compute_eeg_features(cropped_eeg, config)
+        eeg_features[option].append(features)
+
+    # Append the cleaned EEG data
+    eeg_features['cleaned_eeg'] = cleaned_eeg
+    eeg_features['ica'] = ica
+
+    return eeg_features

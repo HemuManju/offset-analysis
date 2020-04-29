@@ -68,6 +68,47 @@ def _append_eog_index(epochs, ica):
     return ica
 
 
+def _filter_eeg(raw_eeg, config):
+    # Drop auxillary channels
+    try:
+        raw_eeg = raw_eeg.drop_channels(['ECG', 'AUX1', 'AUX2', 'AUX3'])
+    except ValueError:
+        pass
+
+    # Filtering
+    raw_eeg.notch_filter(60, filter_length='auto', phase='zero',
+                         verbose=False)  # Line noise
+    raw_eeg.filter(l_freq=0.5, h_freq=50, fir_design='firwin',
+                   verbose=False)  # Band pass filter
+
+    # Channel information
+    raw_eeg.set_montage(montage="standard_1020", set_dig=True, verbose=False)
+    ch_info = {
+        'Fp1': 'eeg',
+        'F7': 'eeg',
+        'F8': 'eeg',
+        'T4': 'eeg',
+        'T6': 'eeg',
+        'T5': 'eeg',
+        'T3': 'eeg',
+        'Fp2': 'eeg',
+        'O1': 'eeg',
+        'P3': 'eeg',
+        'Pz': 'eeg',
+        'F3': 'eeg',
+        'Fz': 'eeg',
+        'F4': 'eeg',
+        'C4': 'eeg',
+        'P4': 'eeg',
+        'POz': 'eeg',
+        'C3': 'eeg',
+        'Cz': 'eeg',
+        'O2': 'eeg'
+    }
+    raw_eeg.set_channel_types(ch_info)
+    return raw_eeg
+
+
 def _clean_with_ica(raw_eeg, config, show_ica=False, apply_on_epoch=False):
     """Clean epochs with ICA.
 

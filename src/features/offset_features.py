@@ -1,6 +1,6 @@
-from .eye_features import extract_eye_features
-from .eeg_features import extract_b_alert_features
-from .game_features import extract_game_features
+from .eye_features import (extract_eye_features, extract_sync_eye_features)
+from .eeg_features import (extract_b_alert_features, extract_sync_eeg_features)
+from .game_features import extract_game_features, compute_option_type
 from .indv_features import extract_individual_features
 from .utils import nested_dict
 
@@ -42,17 +42,20 @@ def extract_synched_features(config):
         for session in config['sessions']:
             print(subject, session)
 
-            # Read eye features
-            features[session]['eye_features'] = extract_eye_features(
+            # Crop the eye data and time_stamps with respect to option time
+            option_type, option_time = compute_option_type(
                 config, subject, session)
+            # Assert they are of same length
+            assert len(option_type) == len(
+                option_time), 'Data are of different length'
 
-            # Read eeg features
-            features[session]['eeg_features'] = extract_b_alert_features(
-                config, subject, session)
+            # Extract eeg features
+            features[session]['eeg_features'] = extract_sync_eeg_features(
+                config, subject, session, option_type, option_time)
 
-            # Read game features
-            features[session]['game_features'] = extract_game_features(
-                config, subject, session)
+            # Extract eye features
+            features[session]['eye_features'] = extract_sync_eye_features(
+                config, subject, session, option_type, option_time)
 
         offset_features['sub-OFS_' + subject] = features
 
