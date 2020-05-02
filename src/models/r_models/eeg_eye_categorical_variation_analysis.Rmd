@@ -1,0 +1,92 @@
+---
+title: "eeg_eye_statistical_analysis_with_categorical_data"
+---
+```{r Initialization}
+
+# Clear all
+rm(list=ls())
+
+library(yaml)
+library(ggplot2)
+library(feather)
+library(lme4)
+library(simr)
+library(here)
+library(sjPlot)
+library(writexl)
+library(ggpubr)
+library(sjmisc)
+
+# Read the configuration file
+config <- yaml.load_file("../../config.yml")
+
+eeg_eye_r_dataset_path <- here(config$eeg_eye_r_dataset_path)
+df <- read_feather(eeg_eye_r_dataset_path)
+df <- na.omit(df)
+
+# Set the response as option type
+response <- df$option_type
+df['output'] <- response
+```
+
+
+```{r Analysis of target and engage option}
+# Select only target and attack option
+# df_static <- subset(df, df$complexity_type=='S002')
+# df_engage <-  subset(df_static, df_static$option_type=='caution_option' | df_static$option_type == 'target_option')
+df_engage <- df
+
+# df_engage$option_type <- relevel(df_engage$option_type, "target_option")
+response <-  df_engage$prob_high_eng
+
+# Fit the mixed effect model
+model <- glmer(response ~ option_type*complexity_type + (1| subject),
+              data = df_engage, family = gaussian(link = log))
+summary(model)
+tab_model(model)
+
+# Correlation analysis
+resp <- log(response)
+weighted_res <- model@resp$wtres
+subjects <- unique(df_engage$subject)
+
+test <- c()
+for (subject in subjects){
+  id <- df_engage$subject == subject
+  test[subject] <- cor(resp[id], weighted_res[id], method = c("pearson"))
+}
+test
+mean(na.omit(test))
+```
+
+
+```{r Analysis of target and engage option}
+# Select only target and attack option
+df_static <- subset(df, df$complexity_type=='S002')
+df_engage <-  subset(df_static, df_static$option_type=='caution_option' | df_static$option_type == 'engage_option')
+df_engage <- df_engage
+response <-  df_engage$option_type
+response[response=='caution_option'] <- 5
+response[response=='engage_option'] <- 1
+
+response <- as.numeric(as.character(response))
+
+# Fit the mixed effect model
+model <- glmer(response ~ n_saccades*n_fixations*engagement_index + (1| subject),
+              data = df_engage, family = gaussian(link = log))
+summary(model)
+tab_model(model)
+
+# Correlation analysis
+resp <- log(response)
+weighted_res <- model@resp$wtres
+subjects <- unique(df_engage$subject)
+
+test <- c()
+for (subject in subjects){
+  id <- df_engage$subject == subject
+  test[subject] <- cor(resp[id], weighted_res[id], method = c("pearson"))
+}
+test
+mean(na.omit(test))
+```

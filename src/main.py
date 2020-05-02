@@ -1,13 +1,16 @@
 import yaml
 from pathlib import Path
 
+import deepdish as dd
+
 from data.utils import save_dataset
 
 from features.clean_eeg_data import clean_eeg_data
 from features.game_features import compute_option_type
-from features.offset_features import extract_synched_features
+from features.offset_features import (extract_synched_features,
+                                      convert_eeg_eye_to_dataframe)
 
-from utils import skip_run
+from utils import skip_run, save_to_r_dataset
 
 # The configuration file
 config_path = Path(__file__).parents[1] / 'src/config.yml'
@@ -30,7 +33,19 @@ with skip_run('skip', 'Test options') as check, check():
     for subject in subjects:
         compute_option_type(config, subject, 'S002')
 
-with skip_run('run', 'Extract epoched features') as check, check():
+with skip_run('skip', 'Extract epoched features') as check, check():
     synched_data = extract_synched_features(config)
     save_path = Path(__file__).parents[1] / config['eeg_eye_features_path']
     save_dataset(str(save_path), synched_data, save=True)
+
+with skip_run('skip', 'Convert features to dataframe') as check, check():
+    eeg_eye_df = convert_eeg_eye_to_dataframe(config)
+    save_path = Path(__file__).parents[1] / config['eeg_eye_dataframe_path']
+    save_dataset(str(save_path), eeg_eye_df, save=True)
+
+with skip_run('skip', 'Convert to r dataframe') as check, check():
+    # Read the pandas dataframe
+    read_path = Path(__file__).parents[1] / config['eeg_eye_dataframe_path']
+    df = dd.io.load(read_path)
+    save_path = Path(__file__).parents[1] / config['eeg_eye_r_dataset_path']
+    save_to_r_dataset(df, str(save_path))

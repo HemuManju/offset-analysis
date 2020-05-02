@@ -1,3 +1,9 @@
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import deepdish as dd
+
 from .eye_features import (extract_eye_features, extract_sync_eye_features)
 from .eeg_features import (extract_b_alert_features, extract_sync_eeg_features)
 from .game_features import extract_game_features, compute_option_type
@@ -60,3 +66,76 @@ def extract_synched_features(config):
         offset_features['sub-OFS_' + subject] = features
 
     return offset_features
+
+
+def consolidate_eeg_features(features):
+    if features:
+        keys = features[0].keys()
+    else:
+        keys = [
+            'cog_state', 'prob_ave_workload', 'prob_bds_workload',
+            'prob_distraction', 'prob_fbds_workload', 'prob_high_eng',
+            'prob_low_eng', 'prob_sleep_onset'
+        ]
+    df_eeg = pd.DataFrame(columns=keys)
+    for i, feature in enumerate(features):
+        df_temp = pd.DataFrame.from_dict(feature).mean()
+
+        # Populate the dataframe
+        df_eeg.loc[i] = df_temp.values
+    return df_eeg
+
+
+def consolidate_eye_features(features):
+    df_eye = pd.DataFrame({
+        'n_fixations': [],
+        'n_saccades': [],
+        'pupil_size': [],
+        'scan_path_length': []
+    })
+
+    for i, feature in enumerate(features):
+        # Populate the dataframe
+        data = [
+            feature['n_fixations'][0], feature['n_saccades'][0],
+            np.nanmean(feature['pupil_size']), feature['scan_path_length'][0]
+        ]
+        df_eye.loc[i] = data
+
+    return df_eye
+
+
+def convert_eeg_eye_to_dataframe(config):
+    options = ['target_option', 'engage_option', 'caution_option']
+
+    eeg_eye_df = pd.DataFrame(np.empty((0, len(config['features']))),
+                              columns=config['features'])
+
+    for subject in config['subjects']:
+        # Read the data of the subject
+        read_path = Path(__file__).parents[2] / config['eeg_eye_features_path']
+        read_group = '/sub-OFS_' + '/'.join([subject])
+        data = dd.io.load(read_path, group=read_group)
+
+        for session in config['sessions']:
+            for option in options:
+                # EEG features
+                eeg_features = data[session]['eeg_features'][option]
+                df_eeg = consolidate_eeg_features(eeg_features)
+
+                # Eye features
+                eye_features = data[session]['eye_features'][option]
+                df_eye = consolidate_eye_features(eye_features)
+
+                # Concatenate them to
+                df_temp = pd.concat([df_eeg, df_eye], axis=1)
+
+                # Add other details
+                df_temp['option_type'] = option
+                df_temp['complexity_type'] = session
+                df_temp['subject'] = subject
+
+                eeg_eye_df = pd.concat([eeg_eye_df, df_temp],
+                                       ignore_index=True)
+    eeg_eye_df.drop(columns='engagement_index', inplace=True)
+    return eeg_eye_df

@@ -109,6 +109,41 @@ def _compute_eeg_features(cropped_eeg, config):
     return features
 
 
+def _compute_b_alert_features(config, subject, session, start_time):
+    column_names = [
+        'session_num', 'elapsed _time', 'clock _time', 'prob_sleep_onset',
+        'prob_distraction', 'prob_low_eng', 'prob_high_eng', 'cog_state',
+        'prob_fbds_workload', 'prob_bds_workload', 'prob_ave_workload'
+    ]
+
+    # Read the file
+    subject_file = 'sub-OFS_' + subject
+    session_file = 'ses-' + session
+    csv_file = ''.join([
+        subject, '11000_ses-', session, '_task-T1_run-001.Classification.csv'
+    ])
+    read_path = ''.join([
+        config['raw_xdf_path'], subject_file, '/', session_file, '/b-alert/',
+        csv_file
+    ])
+
+    # Read the CSV file to a dataframe
+    eeg_df = pd.read_csv(read_path,
+                         skiprows=int(round(start_time)) - 1,
+                         nrows=config['cropping_length'])
+    # Rename columns names
+    eeg_df.columns = column_names
+    eeg_df.dropna()
+    eeg_df = eeg_df[~(eeg_df == -99999).any(axis=1)]
+
+    # Drop columns which are not necessary
+    eeg_df.drop(columns=['session_num', 'elapsed _time', 'clock _time'],
+                inplace=True)
+    b_alert_features = eeg_df.to_dict(orient='list')
+
+    return b_alert_features
+
+
 def _compute_time_threshold(config):
     time = []
     for subject in config['subjects']:
@@ -151,10 +186,12 @@ def extract_sync_eeg_features(config, subject, session, option_type,
         # Crop the data
         start_time = nearest_time_stamp['time'] - time_stamps[0]
         end_time = start_time + config['cropping_length']
-        cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)
+        cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)  # noqa
 
         # Extract the features
-        features = _compute_eeg_features(cropped_eeg, config)
+        # features = _compute_eeg_features(cropped_eeg, config)
+        features = _compute_b_alert_features(config, subject, session,
+                                             start_time)
         eeg_features[option].append(features)
 
     # Append the cleaned EEG data

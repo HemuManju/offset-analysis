@@ -18,7 +18,7 @@ map_data_path: 'data/processed/map_data/'
 # Experiment 0
 # In the experiment the epoch length is calculate using gamma dist
 epoch_length: 1.0
-cropping_length: 5.0
+cropping_length: 3.0
 freq_bands:
   [
     [4.5, 7],
@@ -39,6 +39,14 @@ band_names:
     'higher_Beta',
     'total_Beta',
   ]
+features:
+  [
+    'engagement_index',
+    'n_fixations',
+    'n_saccades',
+    'pupil_size',
+    'scan_path_length',
+  ]
 
 # Raw data path
 raw_offset_dataset: 'data/interim/raw_offset_exp_0_dataset.h5'
@@ -50,6 +58,8 @@ clean_eeg_dataset: 'data/processed/eeg_eye_analysis/clean_eeg_exp_0_dataset.h5'
 eeg_features_path: 'data/processed/eeg_eye_analysis/eeg_features_exp_0_dataframe.h5'
 eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_0_dataframe.h5'
 eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataset.h5'
+eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
+eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.RData'
 
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
