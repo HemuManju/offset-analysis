@@ -13,12 +13,12 @@ individual_diff: ['VS', 'MOT']
 # Data path
 raw_xdf_path: 'data/raw/'
 map_data_path: 'data/processed/map_data/'
-
 ##---------------------------------------------------------------------##
 # Experiment 0
 # In the experiment the epoch length is calculate using gamma dist
 epoch_length: 1.0
-cropping_length: 3.0
+cropping_length: 2.0
+option_type: 'pre_option'
 freq_bands:
   [
     [4.5, 7],
@@ -59,10 +59,62 @@ eeg_features_path: 'data/processed/eeg_eye_analysis/eeg_features_exp_0_dataframe
 eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_0_dataframe.h5'
 eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataset.h5'
 eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
-eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.RData'
+eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.csv'
 
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
 image_save_path: 'data/processed/image_data/'
+# ##---------------------------------------------------------------------##
+# # Experiment 1
+# # In the experiment the epoch length is calculate using gamma dist
+# epoch_length: 1.0
+# cropping_length: 2.0
+# option_type: 'mid_option'
+# freq_bands:
+#   [
+#     [4.5, 7],
+#     [7.5, 10],
+#     [10.5, 12],
+#     [13, 15],
+#     [13.5, 22],
+#     [22.5, 30],
+#     [13.5, 30],
+#   ]
+# band_names:
+#   [
+#     'Theta',
+#     'lower_Alpha',
+#     'higher_Alpha',
+#     'total_Alpha',
+#     'lower_Beta',
+#     'higher_Beta',
+#     'total_Beta',
+#   ]
+# features:
+#   [
+#     'engagement_index',
+#     'n_fixations',
+#     'n_saccades',
+#     'pupil_size',
+#     'scan_path_length',
+#   ]
+
+# # Raw data path
+# raw_offset_dataset: 'data/interim/raw_offset_exp_0_dataset.h5'
+# raw_eeg_dataset: 'data/interim/raw_eeg_exp_0_dataset.h5'
+# raw_eye_dataset: 'data/interim/raw_eye_exp_0_dataset.h5'
+
+# # Cleaned and features data path
+# clean_eeg_dataset: 'data/processed/eeg_eye_analysis/clean_eeg_exp_0_dataset.h5'
+# eeg_features_path: 'data/processed/eeg_eye_analysis/eeg_features_exp_1_dataframe.h5'
+# eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_1_dataframe.h5'
+# eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataset.h5'
+# eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
+# eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_1_dataframe.csv'
+
+# game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
+# offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
+# individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
+# image_save_path: 'data/processed/image_data/'
 ##---------------------------------------------------------------------##

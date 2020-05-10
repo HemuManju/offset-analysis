@@ -55,7 +55,7 @@ class ColorPrint:
         sys.stderr.write('\x1b[1;33m' + message.strip() + '\x1b[0m' + end)
 
 
-def save_to_r_dataset(df, path):
+def save_to_r_dataset(df, path, save_as_csv=False):
     """Convert pandas dataframe to r dataframe.
 
     Parameters
@@ -71,5 +71,8 @@ def save_to_r_dataset(df, path):
         Description of returned object.
 
     """
-    feather.write_dataframe(df, path)
+    if save_as_csv:
+        df.to_csv(path, index=False)
+    else:
+        feather.write_dataframe(df, path)
     return None

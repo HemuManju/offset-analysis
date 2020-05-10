@@ -163,6 +163,7 @@ def _compute_time_threshold(config):
 
 def extract_sync_eeg_features(config, subject, session, option_type,
                               option_time):
+
     # Read subjects eye data
     eeg_data, time_stamps = read_xdf_eeg_data(config, subject, session)
     time_kd_tree = construct_time_kd_tree(np.array(time_stamps, ndmin=2).T)
@@ -184,8 +185,13 @@ def extract_sync_eeg_features(config, subject, session, option_type,
         nearest_time_stamp = find_nearest_time_stamp(time_kd_tree, time)
 
         # Crop the data
-        start_time = nearest_time_stamp['time'] - time_stamps[0]
-        end_time = start_time + config['cropping_length']
+        if config['option_type'] == 'pre_option':
+            start_time = nearest_time_stamp['time'] - time_stamps[0] - config[
+                'cropping_length']
+            end_time = start_time + config['cropping_length']
+        else:
+            start_time = nearest_time_stamp['time'] - time_stamps[0]
+            end_time = start_time + config['cropping_length']
         cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)  # noqa
 
         # Extract the features

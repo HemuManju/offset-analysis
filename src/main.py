@@ -48,4 +48,4 @@ with skip_run('skip', 'Convert to r dataframe') as check, check():
     read_path = Path(__file__).parents[1] / config['eeg_eye_dataframe_path']
     df = dd.io.load(read_path)
     save_path = Path(__file__).parents[1] / config['eeg_eye_r_dataset_path']
-    save_to_r_dataset(df, str(save_path))
+    save_to_r_dataset(df, str(save_path), save_as_csv=True)

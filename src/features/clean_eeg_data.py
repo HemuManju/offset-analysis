@@ -82,7 +82,7 @@ def _filter_eeg(raw_eeg, config):
                    verbose=False)  # Band pass filter
 
     # Channel information
-    raw_eeg.set_montage(montage="standard_1020", set_dig=True, verbose=False)
+    raw_eeg.set_montage(montage="standard_1020", verbose=False)
     ch_info = {
         'Fp1': 'eeg',
         'F7': 'eeg',
@@ -126,7 +126,7 @@ def _clean_with_ica(raw_eeg, config, show_ica=False, apply_on_epoch=False):
         raw_eeg = raw_eeg.drop_channels(['ECG', 'AUX1', 'AUX2', 'AUX3'])
     except ValueError:
         pass
-    raw_eeg.set_montage(montage="standard_1020", set_dig=True, verbose=False)
+    raw_eeg.set_montage(montage="standard_1020", verbose=False)
     picks = mne.pick_types(raw_eeg.info,
                            meg=False,
                            eeg=True,

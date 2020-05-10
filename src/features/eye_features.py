@@ -81,8 +81,14 @@ def extract_sync_eye_features(config, subject, session, option_type,
         nearest_time_stamp = find_nearest_time_stamp(time_kd_tree, time)
 
         # Crop the data
-        start_time = nearest_time_stamp['time'] - time_stamps[0]
-        end_time = start_time + config['cropping_length']
+        if config['option_type'] == 'pre_option':
+            start_time = nearest_time_stamp['time'] - time_stamps[0] - config[
+                'cropping_length']
+            end_time = start_time + config['cropping_length']
+        else:
+            start_time = nearest_time_stamp['time'] - time_stamps[0]
+            end_time = start_time + config['cropping_length']
+
         cropped_data = temp_eye.crop(tmin=start_time, tmax=end_time)
 
         # Extract the features

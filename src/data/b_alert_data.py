@@ -21,7 +21,7 @@ def decontaminate_eeg(raw_eeg, config, ica_clean):
                    verbose=False)  # Band pass filter
 
     # Channel information
-    raw_eeg.set_montage(montage="standard_1020", set_dig=True, verbose=False)
+    raw_eeg.set_montage(montage="standard_1020", verbose=False)
     ch_info = {
         'Fp1': 'eeg',
         'F7': 'eeg',

@@ -131,9 +131,10 @@ def convert_eeg_eye_to_dataframe(config):
                 df_temp = pd.concat([df_eeg, df_eye], axis=1)
 
                 # Add other details
-                df_temp['option_type'] = option
+                df_temp['option'] = option
                 df_temp['complexity_type'] = session
                 df_temp['subject'] = subject
+                df_temp['option_type'] = config['option_type']
 
                 eeg_eye_df = pd.concat([eeg_eye_df, df_temp],
                                        ignore_index=True)
