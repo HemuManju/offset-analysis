@@ -43,8 +43,8 @@ df_static <- subset(df_pre_option, df$complexity_type=='S002')
 df_engage <- df_static
 df_engage <- na.omit(df_engage)
 
-df_engage$option <- relevel(df_engage$option, "target_option")
-response <-  df_engage$pupil_size
+df_engage$option <- relevel(df_engage$option, "caution_option")
+response <-  df_engage$scan_path_length
 
 # Fit the mixed effect model
 model <- glmer(response ~ option +  (1 | subject),

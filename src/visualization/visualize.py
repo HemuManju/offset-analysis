@@ -15,6 +15,8 @@ from .graph_visualize import _network_legend
 from features.gaze.gazeplotter import (draw_heatmap, draw_display,
                                        draw_eye_heatmap)
 
+from .utils import _convert_to_global_coor
+
 
 def _plot_settings():
     """Change the asthetics of the given figure (operators in place).
@@ -292,8 +294,10 @@ def draw_fixation_in_global_coor(fixations, animate=True):
             draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
             plt.cla()
     else:
+        fixations = _convert_to_global_coor(fixations, window_size=[1500, 750])
         fig, ax = draw_display((1500, 750), imagefile=read_path)
         draw_heatmap(fixations, dispsize=(1500, 750), ax=ax, imagefile=img)
+        plt.savefig('fixation_heat_map.pdf')
         plt.show()
 
 

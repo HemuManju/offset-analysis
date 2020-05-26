@@ -1,4 +1,6 @@
+from pathlib import Path
 import collections
+import deepdish as dd
 
 import numpy as np
 from scipy.stats import gamma
@@ -35,6 +37,15 @@ def nested_dict():
 def construct_time_kd_tree(time_stamps):
     time_tree = spatial.KDTree(time_stamps)
     return time_tree
+
+
+def read_data(config, subject, session, features):
+    read_path = Path(__file__).parents[2] / config['offset_features_path']
+    read_group = '/sub-OFS_' + '/'.join([subject, session, features])
+
+    # Read game data
+    data = dd.io.load(read_path, group=read_group)
+    return data
 
 
 def gamma_percentile(data, percentile):

@@ -141,7 +141,7 @@ def draw_heatmap(fixations,
                  ax,
                  imagefile=None,
                  durationweight=True,
-                 alpha=0.5,
+                 alpha=0.65,
                  savefilename=None):
     """Draws a heatmap of the provided fixations, optionally drawn over an
     image, and optionally allocating more weight to fixations with a higher
@@ -185,16 +185,16 @@ def draw_heatmap(fixations,
 
     # HEATMAP
     # Gaussian
-    gwh = 200
+    gwh = 100
     gsdwh = gwh / 6
     gaus = gaussian(gwh, gsdwh)
-    print(gaus)
-    # matrix of zeroes
+
+    # Matrix of zeroes
     strt = int(gwh / 2)
     heatmapsize = int(dispsize[1] + 2 * strt), int(dispsize[0] + 2 * strt)
     heatmap = numpy.zeros(heatmapsize, dtype=float)
     # create heatmap
-    for i in range(0, len(fix['dur'])):
+    for i in range(0, len(fix['dur']) - 1):
         # get x and y coordinates
         # x and y - indexes of heatmap array. must be integers
         x = int(strt) + int(fix['x'][i]) - int(gwh / 2)
@@ -227,23 +227,13 @@ def draw_heatmap(fixations,
             heatmap[y:y + gwh, x:x + gwh] += gaus * fix['dur'][i]
     # resize heatmap
     heatmap = heatmap[strt:dispsize[1] + strt, strt:dispsize[0] + strt]
+
     # remove zeros
-    lowbound = numpy.mean(heatmap[heatmap > 0])
+    lowbound = numpy.mean(heatmap[heatmap >= 0])
     heatmap[heatmap < lowbound] = numpy.NaN
 
     # draw heatmap on top of image
     ax.imshow(heatmap, cmap='jet', alpha=alpha)
-
-    # invert the y axis, as (0,0) is top left on a display
-    ax.invert_yaxis()
-    pyplot.pause(0.001)
-    ax.cla()
-
-    # FINISH PLOT
-    # save the figure if a file name was provided
-    # if savefilename is not None:
-    #     fig.savefig(savefilename)
-
     return None
 
 
@@ -286,12 +276,15 @@ def draw_eye_heatmap(positions,
     fig			-	a matplotlib.pyplot Figure instance, containing the
                     heatmap
     """
+    # Convert nan to zero
+    positions = numpy.nan_to_num(positions)
 
     # HEATMAP
     # Gaussian
     gwh = 200
     gsdwh = gwh / 6
     gaus = gaussian(gwh, gsdwh)
+
     # matrix of zeroes
     strt = int(gwh / 2)
     heatmapsize = int(dispsize[1] + 2 * strt), int(dispsize[0] + 2 * strt)
@@ -581,7 +574,7 @@ def draw_scanpath(fixations,
     return fig
 
 
-# # # # #
+# ---------------------------------------------------- #
 # HELPER FUNCTIONS
 
 
@@ -713,8 +706,8 @@ def parse_fixations(fixations):
     # get all fixation coordinates
     for fixnr in range(len(fixations)):
         stime, etime, dur, ex, ey = fixations[fixnr]
-        fix['x'][fixnr] = ex
-        fix['y'][fixnr] = ey
+        fix['x'][fixnr] = numpy.nan_to_num(ex)
+        fix['y'][fixnr] = numpy.nan_to_num(ey)
         fix['dur'][fixnr] = dur
 
     return fix

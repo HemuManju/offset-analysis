@@ -9,7 +9,9 @@ from features.clean_eeg_data import clean_eeg_data
 from features.game_features import compute_option_type
 from features.offset_features import (extract_synched_features,
                                       convert_eeg_eye_to_dataframe)
+from features.utils import read_data
 
+from visualization.visualize import draw_fixation_in_global_coor
 from utils import skip_run, save_to_r_dataset
 
 # The configuration file
@@ -49,3 +51,10 @@ with skip_run('skip', 'Convert to r dataframe') as check, check():
     df = dd.io.load(read_path)
     save_path = Path(__file__).parents[1] / config['eeg_eye_r_dataset_path']
     save_to_r_dataset(df, str(save_path), save_as_csv=True)
+
+with skip_run('skip', 'Draw fixation on global screen') as check, check():
+    subject = config['subjects'][0]
+    session = config['sessions'][0]
+    eye_data = read_data(config, subject, session, 'eye_features')
+    fixations = eye_data['fixations']
+    draw_fixation_in_global_coor(fixations, animate=False)
