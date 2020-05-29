@@ -161,16 +161,21 @@ def _compute_time_threshold(config):
     return None
 
 
-def extract_sync_eeg_features(config, subject, session, option_type,
-                              option_time):
+def extract_sync_eeg_features(config,
+                              subject,
+                              session,
+                              option_type,
+                              option_time,
+                              use_balert=True):
 
     # Read subjects eye data
     eeg_data, time_stamps = read_xdf_eeg_data(config, subject, session)
     time_kd_tree = construct_time_kd_tree(np.array(time_stamps, ndmin=2).T)
 
-    # Filter and clean the EEG data
-    filtered_eeg = _filter_eeg(eeg_data, config)
-    cleaned_eeg, ica = _clean_with_ica(filtered_eeg, config)
+    if not use_balert:
+        # Filter and clean the EEG data
+        filtered_eeg = _filter_eeg(eeg_data, config)
+        cleaned_eeg, ica = _clean_with_ica(filtered_eeg, config)
 
     eeg_features = {}
     eeg_features['target_option'] = []
@@ -178,13 +183,11 @@ def extract_sync_eeg_features(config, subject, session, option_type,
     eeg_features['caution_option'] = []
 
     for option, time in zip(option_type, option_time):
-        # Copy the cleaned eeg
-        temp_eeg = cleaned_eeg.copy()
 
         # Find the nearest time stamp
         nearest_time_stamp = find_nearest_time_stamp(time_kd_tree, time)
 
-        # Crop the data
+        # Get the start and end time of the epoch
         if config['option_type'] == 'pre_option':
             start_time = nearest_time_stamp['time'] - time_stamps[0] - config[
                 'cropping_length']
@@ -192,16 +195,22 @@ def extract_sync_eeg_features(config, subject, session, option_type,
         else:
             start_time = nearest_time_stamp['time'] - time_stamps[0]
             end_time = start_time + config['cropping_length']
-        cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)  # noqa
 
-        # Extract the features
-        # features = _compute_eeg_features(cropped_eeg, config)
-        features = _compute_b_alert_features(config, subject, session,
-                                             start_time)
+        if not use_balert:
+            # Copy the cleaned eeg
+            temp_eeg = cleaned_eeg.copy()
+            cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)
+            # Extract the features
+            features = _compute_eeg_features(cropped_eeg, config)
+            # Append the cleaned EEG data
+            eeg_features['cleaned_eeg'] = cleaned_eeg
+            eeg_features['ica'] = ica
+
+        else:  # Extract B-alert features
+            features = _compute_b_alert_features(config, subject, session,
+                                                 start_time)
+
+        # Append the dictionary
         eeg_features[option].append(features)
-
-    # Append the cleaned EEG data
-    eeg_features['cleaned_eeg'] = cleaned_eeg
-    eeg_features['ica'] = ica
 
     return eeg_features

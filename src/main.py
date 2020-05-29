@@ -45,8 +45,7 @@ with skip_run('skip', 'Convert features to dataframe') as check, check():
     save_path = Path(__file__).parents[1] / config['eeg_eye_dataframe_path']
     save_dataset(str(save_path), eeg_eye_df, save=True)
 
-with skip_run('skip', 'Convert to r dataframe') as check, check():
-    # Read the pandas dataframe
+    # Convert to r dataframe and save
     read_path = Path(__file__).parents[1] / config['eeg_eye_dataframe_path']
     df = dd.io.load(read_path)
     save_path = Path(__file__).parents[1] / config['eeg_eye_r_dataset_path']

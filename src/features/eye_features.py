@@ -52,15 +52,6 @@ def _compute_eye_features(eye_data, time_stamps):
     return eye_features
 
 
-def extract_eye_features(config, subject, session):
-    # Read the eye data
-    eye_data, time_stamps = read_xdf_eye_data(config, subject, session)
-
-    # Calculate the features
-    eye_features = _compute_eye_features(eye_data, time_stamps)
-    return eye_features
-
-
 def extract_sync_eye_features(config, subject, session, option_type,
                               option_time):
 

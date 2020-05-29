@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 import deepdish as dd
 
-from .eye_features import (extract_eye_features, extract_sync_eye_features)
-from .eeg_features import (extract_b_alert_features, extract_sync_eeg_features)
-from .game_features import extract_game_features, compute_option_type
+from .eye_features import extract_sync_eye_features
+from .eeg_features import extract_sync_eeg_features
+from .game_features import compute_option_type
 from .indv_features import extract_individual_features
 from .utils import nested_dict
 
 
-def extract_offset_features(config):
+def extract_synched_features(config):
     offset_features = {}
     for subject in config['subjects']:
         features = nested_dict()
@@ -23,34 +23,10 @@ def extract_offset_features(config):
         for session in config['sessions']:
             print(subject, session)
 
-            # Read eye features
-            features[session]['eye_features'] = extract_eye_features(
-                config, subject, session)
-
-            # Read eeg features
-            features[session]['eeg_features'] = extract_b_alert_features(
-                config, subject, session)
-
-            # Read game features
-            features[session]['game_features'] = extract_game_features(
-                config, subject, session)
-
-        offset_features['sub-OFS_' + subject] = features
-
-    return offset_features
-
-
-def extract_synched_features(config):
-    offset_features = {}
-    for subject in config['subjects']:
-        features = nested_dict()
-
-        for session in config['sessions']:
-            print(subject, session)
-
             # Crop the eye data and time_stamps with respect to option time
             option_type, option_time = compute_option_type(
                 config, subject, session)
+
             # Assert they are of same length
             assert len(option_type) == len(
                 option_time), 'Data are of different length'
@@ -63,6 +39,7 @@ def extract_synched_features(config):
             features[session]['eye_features'] = extract_sync_eye_features(
                 config, subject, session, option_type, option_time)
 
+        # Add to the global data dictionary
         offset_features['sub-OFS_' + subject] = features
 
     return offset_features
@@ -108,8 +85,7 @@ def consolidate_eye_features(features):
 def convert_eeg_eye_to_dataframe(config):
     options = ['target_option', 'engage_option', 'caution_option']
 
-    eeg_eye_df = pd.DataFrame(np.empty((0, len(config['features']))),
-                              columns=config['features'])
+    eeg_eye_df = pd.DataFrame()
 
     for subject in config['subjects']:
         # Read the data of the subject
@@ -135,8 +111,10 @@ def convert_eeg_eye_to_dataframe(config):
                 df_temp['complexity_type'] = session
                 df_temp['subject'] = subject
                 df_temp['option_type'] = config['option_type']
+                df_temp['mot'] = data['individual_difference']['mot']
+                df_temp['vs'] = data['individual_difference']['vs']
 
                 eeg_eye_df = pd.concat([eeg_eye_df, df_temp],
                                        ignore_index=True)
-    eeg_eye_df.drop(columns='engagement_index', inplace=True)
+    print(eeg_eye_df)
     return eeg_eye_df

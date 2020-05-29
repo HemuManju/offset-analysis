@@ -60,7 +60,9 @@ eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_0_dataframe
 eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataset.h5'
 eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
 eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.csv'
+expert_label_path: 'data/external/expert_labels.xlsx'
 
+# Game features
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
