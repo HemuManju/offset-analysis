@@ -33,7 +33,7 @@ df_pre_option <- subset(df, df$option_type=='pre_option')
 df_static <- subset(df_pre_option, df_pre_option$complexity_type=='S002')
 
 # Select reference level and comparison level
-comparions_option <- 'engage_option'
+comparions_option <- 'target_option'
 reference_option <- 'caution_option'
 df_static <-  subset(df_static, df_static$option==reference_option| df_static$option == comparions_option)
 
@@ -43,7 +43,7 @@ df_static$response[df_static$option==reference_option] <- 0
 df_static$response[df_static$option==comparions_option] <- 1
 
 # Fit the mixed effect model
-model <- lmer(response ~ prob_high_eng + prob_ave_workload + pupil_size + n_saccades + scan_path_length + n_fixations + (1 |mot),data = df_static)
+model <- lmer(response ~ prob_high_eng + (1 |mot),data = df_static)
 summary(model)
 tab_model(model)
 ```

@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import mne
+from mne.connectivity import spectral_connectivity
 from mne.time_frequency import psd_multitaper
 
 import matplotlib.pyplot as plt
@@ -88,8 +89,30 @@ def _compute_engagement_index(epochs, config):
     return beta_alpha_theta.values
 
 
-def _compute_coherence(epochs):
-    raise NotImplementedError
+def _compute_coherence(cropped_eeg, config):
+    epoch_length = config['epoch_length']
+    events = mne.make_fixed_length_events(cropped_eeg, duration=epoch_length)
+    epochs = mne.Epochs(cropped_eeg,
+                        events,
+                        picks=['eeg'],
+                        tmin=0,
+                        tmax=config['epoch_length'],
+                        baseline=(0, 0),
+                        verbose=False)
+    fmin = (10.5, 22.5, 38)
+    fmax = (12, 30, 42)
+    # NOTE: Need to rewrite in a general way
+    indices = (np.array([6, 6, 6]), np.array([8, 10, 12]))
+    coh, freqs, _, _, _ = spectral_connectivity(epochs,
+                                                fmin=fmin,
+                                                fmax=fmax,
+                                                indices=indices,
+                                                faverage=True,
+                                                verbose=False)
+    keys = ['fz_pz_alpha', 'fz_t3_beta', 'fz_o1_gamma']
+    values = np.diag(coh).tolist()
+    coherence = dict(zip(keys, values))
+    return coherence
 
 
 def _compute_eeg_features(cropped_eeg, config):
@@ -172,10 +195,9 @@ def extract_sync_eeg_features(config,
     eeg_data, time_stamps = read_xdf_eeg_data(config, subject, session)
     time_kd_tree = construct_time_kd_tree(np.array(time_stamps, ndmin=2).T)
 
-    if not use_balert:
-        # Filter and clean the EEG data
-        filtered_eeg = _filter_eeg(eeg_data, config)
-        cleaned_eeg, ica = _clean_with_ica(filtered_eeg, config)
+    # Filter and clean the EEG data
+    filtered_eeg = _filter_eeg(eeg_data, config)
+    cleaned_eeg, ica = _clean_with_ica(filtered_eeg, config)
 
     eeg_features = {}
     eeg_features['target_option'] = []
@@ -212,8 +234,12 @@ def extract_sync_eeg_features(config,
             eeg_features['ica'] = ica
 
         else:  # Extract B-alert features
+            temp_eeg = cleaned_eeg.copy()
+            cropped_eeg = temp_eeg.crop(tmin=start_time, tmax=end_time)
+            coherence = _compute_coherence(cropped_eeg, config)
             features = _compute_b_alert_features(config, subject, session,
                                                  start_time)
+            features.update(coherence)
 
         # Append the dictionary
         eeg_features[option].append(features)

@@ -51,7 +51,8 @@ def consolidate_eeg_features(features):
         keys = [
             'cog_state', 'prob_ave_workload', 'prob_bds_workload',
             'prob_distraction', 'prob_fbds_workload', 'prob_high_eng',
-            'prob_low_eng', 'prob_sleep_onset'
+            'prob_low_eng', 'prob_sleep_onset', 'fz_pz_alpha', 'fz_t3_beta',
+            'fz_o1_gamma'
         ]
     df_eeg = pd.DataFrame(columns=keys)
     for i, feature in enumerate(features):

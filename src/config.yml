@@ -77,6 +77,7 @@ eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_d
 eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
 eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.csv'
 expert_labels_path: 'data/external/expert_labels.xlsx'
+coherence_data_path: 'data/external/coherence.h5'
 
 # Game features
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'

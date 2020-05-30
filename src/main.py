@@ -12,6 +12,7 @@ from features.offset_features import (extract_synched_features,
 from features.utils import read_data
 
 from visualization.visualize import draw_fixation_in_global_coor
+from visualization.epoch_visualize import topo_map
 from utils import skip_run, save_to_r_dataset
 
 # The configuration file
@@ -57,3 +58,8 @@ with skip_run('skip', 'Draw fixation on global screen') as check, check():
     eye_data = read_data(config, subject, session, 'eye_features')
     fixations = eye_data['fixations']
     draw_fixation_in_global_coor(fixations, animate=False)
+
+with skip_run('run', 'Draw topomaps') as check, check():
+    subject = '2014'
+    session = config['sessions'][0]
+    topo_map(subject, config, session)
