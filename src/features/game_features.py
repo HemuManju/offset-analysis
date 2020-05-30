@@ -129,17 +129,22 @@ def _get_complexity_node_index(config, game_data):
     # Get the complexity states
     co_states = game_data['complexity_states']
 
+    if co_states:
+        centroid_pos = np.array(list(findkeys(co_states, 'centroid_pos')),
+                                ndmin=2)
+    else:
+        temp = game_data['states']  # Copy the states themselves
+        centroid_pos = np.array(list(findkeys(temp, 'centroid_pos')), ndmin=2)
+
     # Node position
     nodes_pos = _initial_nodes_setup(config)
     nodes_pos = nodes_pos - nodes_pos[48, :]
     nodes_kd_tree = KDTree(nodes_pos)
-    centroid_pos = np.array(list(findkeys(co_states, 'centroid_pos')), ndmin=2)
 
     # Get node index and reshape to 6 by m
     node_index = nodes_kd_tree.query(centroid_pos, k=1)[1]
     n_ele = len(node_index) - int(len(node_index) // 6) * 6
     node_index = node_index[n_ele:].reshape(6, -1, order='F')
-
     return node_index
 
 
@@ -184,7 +189,7 @@ def compute_option_type(config, subject, session):
     complexity_nodes = _get_complexity_node_index(config, game_data)
 
     # Pause and resume time stamps
-    _, resume_time_stamps, _ = _extract_action_info(game_data)
+    pause_time_stamps, _, _ = _extract_action_info(game_data)
 
     # User actions
     user_selected_nodes = game_data['selected_node']
@@ -193,8 +198,7 @@ def compute_option_type(config, subject, session):
     option_type = []
     epoch_time = []
     game_time_stamps = game_data['time_stamps'].tolist()
-    for time_stamp in resume_time_stamps:
-
+    for time_stamp in pause_time_stamps:
         # User selection after the resume
         time_id = game_time_stamps.index(time_stamp) + 1
         epoch_time.append(game_time_stamps[time_id])

@@ -4,9 +4,25 @@ n_electrodes: 30
 sfreq: 256.0
 overlap: 0.75
 subjects:
-  ['2009', '2011', '2012', '2013', '2014', '2015', '2017', '2018', '2020']
-#    '2001', '2002', '2003', '2004', '2005', '2007', '2008',
-sessions: ['S002', 'S003']
+  [
+    '2002',
+    '2003',
+    '2004',
+    '2005',
+    '2007',
+    '2008',
+    '2009',
+    '2011',
+    '2012',
+    '2013',
+    '2014',
+    '2015',
+    '2017',
+    '2018',
+    '2020',
+  ]
+#
+sessions: ['S002']
 individual_diff: ['VS', 'MOT']
 ##---------------------------------------------------------------------##
 # Initial cleaning for B-Alert
@@ -17,7 +33,7 @@ map_data_path: 'data/processed/map_data/'
 # Experiment 0
 # In the experiment the epoch length is calculate using gamma dist
 epoch_length: 1.0
-cropping_length: 2.0
+cropping_length: 3.0
 option_type: 'pre_option'
 freq_bands:
   [
@@ -60,7 +76,7 @@ eye_features_path: 'data/processed/eeg_eye_analysis/eye_features_exp_0_dataframe
 eeg_eye_features_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataset.h5'
 eeg_eye_dataframe_path: 'data/processed/eeg_eye_analysis/eeg_eye_features_exp_0_dataframe.h5'
 eeg_eye_r_dataset_path: 'data/processed/eeg_eye_analysis/r_data/eeg_eye_exp_0_dataframe.csv'
-expert_label_path: 'data/external/expert_labels.xlsx'
+expert_labels_path: 'data/external/expert_labels.xlsx'
 
 # Game features
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'

@@ -26,7 +26,6 @@ def extract_synched_features(config):
             # Crop the eye data and time_stamps with respect to option time
             option_type, option_time = compute_option_type(
                 config, subject, session)
-
             # Assert they are of same length
             assert len(option_type) == len(
                 option_time), 'Data are of different length'
@@ -85,9 +84,17 @@ def consolidate_eye_features(features):
 def convert_eeg_eye_to_dataframe(config):
     options = ['target_option', 'engage_option', 'caution_option']
 
+    # Empty data frame
     eeg_eye_df = pd.DataFrame()
 
+    # Load the expert labels
+    expert_labels = pd.read_excel(config['expert_labels_path'])
+    expert_labels.columns = expert_labels.columns.astype(str)
+
     for subject in config['subjects']:
+        # Expert labels for the given subjects
+        option_labels = expert_labels[subject].dropna()
+
         # Read the data of the subject
         read_path = Path(__file__).parents[2] / config['eeg_eye_features_path']
         read_group = '/sub-OFS_' + '/'.join([subject])
@@ -116,5 +123,14 @@ def convert_eeg_eye_to_dataframe(config):
 
                 eeg_eye_df = pd.concat([eeg_eye_df, df_temp],
                                        ignore_index=True)
-    print(eeg_eye_df)
+            # Assert that code generated labels and expert labels are of same length
+            subject_data = eeg_eye_df[eeg_eye_df['subject'] == subject]
+
+            assert len(subject_data['option']) == len(
+                option_labels), 'Data are of different length'
+
+            # Update the labels with expert labels
+            index = eeg_eye_df['subject'] == subject
+            eeg_eye_df.loc[index, 'option'] = option_labels.values
+
     return eeg_eye_df

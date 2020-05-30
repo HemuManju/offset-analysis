@@ -80,6 +80,8 @@ def extract_sync_eye_features(config, subject, session, option_type,
             start_time = nearest_time_stamp['time'] - time_stamps[0]
             end_time = start_time + config['cropping_length']
 
+        if start_time < 0:
+            start_time = 0
         cropped_data = temp_eye.crop(tmin=start_time, tmax=end_time)
 
         # Extract the features

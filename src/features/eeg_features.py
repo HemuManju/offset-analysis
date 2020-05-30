@@ -192,9 +192,14 @@ def extract_sync_eeg_features(config,
             start_time = nearest_time_stamp['time'] - time_stamps[0] - config[
                 'cropping_length']
             end_time = start_time + config['cropping_length']
+
         else:
             start_time = nearest_time_stamp['time'] - time_stamps[0]
             end_time = start_time + config['cropping_length']
+
+        # Adjust the start time
+        if start_time < 0:
+            start_time = 0
 
         if not use_balert:
             # Copy the cleaned eeg
