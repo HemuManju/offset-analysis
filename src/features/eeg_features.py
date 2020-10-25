@@ -109,7 +109,7 @@ def _compute_coherence(cropped_eeg, config):
                                                 indices=indices,
                                                 faverage=True,
                                                 verbose=False)
-    keys = ['fz_pz_alpha', 'fz_t3_beta', 'fz_o1_gamma']
+    keys = ['fz_pz_alpha', 'fz_t3_beta', 'fz_o1_beta']
     values = np.diag(coh).tolist()
     coherence = dict(zip(keys, values))
     return coherence

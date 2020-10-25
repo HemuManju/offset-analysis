@@ -40,6 +40,7 @@ def match_streaminfos(stream_infos, parameters):
                   a "type" field equal to "EEG".
     """
     matches = []
+    match = None
     for request in parameters:
         for info in stream_infos:
             for key in request.keys():
@@ -164,7 +165,7 @@ def read_raw_xdf(fname, stream_id=None):
         XDF file data.
     """
     streams, header = load_xdf(fname)
-
+    stream = None
     if stream_id is not None:
         if isinstance(stream_id, str):
             stream = _find_stream_by_name(streams, stream_id)
@@ -206,7 +207,7 @@ def read_raw_xdf(fname, stream_id=None):
         annotations = mne.Annotations(onsets, [0] * len(onsets), descriptions)
         raw.set_annotations(annotations)
 
-    return raw, stream['time_stamps']
+    return raw, stream
 
 
 def _find_stream_by_name(streams, stream_name):

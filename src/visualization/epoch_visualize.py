@@ -151,23 +151,6 @@ def topo_map(subject, config, session):
         ax[i].set_title('Coherence Value ={:.2f}'.format(
             coherence['fz_o1_gamma']))
         ax[i].set_xlabel(option_label[option])
-        #
-
-        # # plt.show()
-        # if hand_type == 'dominant':
-        #     plt.suptitle('Dominant hand')
-        # else:
-        #     plt.suptitle('Non dominant hand')
-        # plt.tight_layout()
-        # save_path = Path(__file__).parents[2]
-        # if hand_type == 'dominant':
-        #     plt.savefig(
-        #         str(save_path) + '/reports/figures/topomap_dominant_hand.pdf')
-        # else:
-        #     plt.savefig(
-        #         str(save_path) + '/reports/figures/topomap_non_dominant_hand.pdf')
-    # clb = ax[-1].figure.colorbar(img, ax=ax[-1], fraction=0.046, pad=0.075)
-    # clb.ax.set_title('$\mu V^2$')
     plt.savefig('coherence.pdf')
     plt.show()
     return None

@@ -1,4 +1,5 @@
 # Global parameters
+extract_only_time: True
 n_nodes: 53
 n_electrodes: 30
 sfreq: 256.0
@@ -68,6 +69,7 @@ features:
 raw_offset_dataset: 'data/interim/raw_offset_exp_0_dataset.h5'
 raw_eeg_dataset: 'data/interim/raw_eeg_exp_0_dataset.h5'
 raw_eye_dataset: 'data/interim/raw_eye_exp_0_dataset.h5'
+time_offset_dataset: 'data/interim/time_offset_exp_0_dataset.h5'
 
 # Cleaned and features data path
 clean_eeg_dataset: 'data/processed/eeg_eye_analysis/clean_eeg_exp_0_dataset.h5'
@@ -84,6 +86,9 @@ game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
 image_save_path: 'data/processed/image_data/'
+
+# R-data path
+r_regression_path: 'data/external/'
 # ##---------------------------------------------------------------------##
 # # Experiment 1
 # # In the experiment the epoch length is calculate using gamma dist

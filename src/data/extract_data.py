@@ -18,8 +18,8 @@ def read_xdf_eeg_data(config, subject, session):
     # Read paths
     read_path = config[
         'raw_xdf_path'] + subject_file + '/' + session_file + '/' + xdf_file
-    raw_eeg, time_stamps = read_raw_xdf(read_path)
-    return raw_eeg, time_stamps
+    raw_eeg, time_info = read_raw_xdf(read_path)
+    return raw_eeg, time_info
 
 
 def read_xdf_eye_data(config, subject, session):
@@ -32,9 +32,8 @@ def read_xdf_eye_data(config, subject, session):
     # Read paths
     read_path = config[
         'raw_xdf_path'] + subject_file + '/' + session_file + '/' + xdf_file
-    raw_eye, time_stamps = read_raw_xdf(read_path,
-                                        stream_id='Tobii_Eye_Tracker')
-    return raw_eye, time_stamps
+    raw_eye, time_info = read_raw_xdf(read_path, stream_id='Tobii_Eye_Tracker')
+    return raw_eye, time_info
 
 
 def read_individual_diff(config, subject):
@@ -69,13 +68,13 @@ def read_xdf_game_data(config, subject, session):
         'raw_xdf_path'] + subject_file + '/' + session_file + '/' + xdf_file
 
     streams, fileheader = pyxdf.load_xdf(read_path)
+    raw_game, time_info = None, None
     for stream in streams:
-        raw_game = []
         if stream["info"]["name"][0] == 'parameter_server_states':
             raw_game = [ujson.loads(data[0]) for data in stream["time_series"]]
-            time_stamps = stream["time_stamps"]
+            time_info = stream
             break
-    return raw_game, time_stamps
+    return raw_game, time_info
 
 
 def extract_offset_data(config):
@@ -84,20 +83,31 @@ def extract_offset_data(config):
     for subject in config['subjects']:
         data = nested_dict()
         for session in config['sessions']:
-            eye_data, eye_time_stamp = read_xdf_eye_data(
+            eye_data, eye_time_info = read_xdf_eye_data(
                 config, subject, session)
-            eeg_data, eeg_time_stamp = read_xdf_eeg_data(
+            eeg_data, eeg_time_info = read_xdf_eeg_data(
                 config, subject, session)
-            game_data, game_time_stamp = read_xdf_game_data(
+            game_data, game_time_info = read_xdf_game_data(
                 config, subject, session)
 
-            # Save the data in dictionary
-            data[session]['eye']['data'] = eye_data
-            data[session]['eye']['time_stamps'] = eye_time_stamp
-            data[session]['eeg']['data'] = eeg_data
-            data[session]['eeg']['time_stamps'] = eeg_time_stamp
-            data[session]['game']['data'] = game_data
-            data[session]['game']['time_stamps'] = game_time_stamp
+            if config['extract_only_time']:
+                data[session]['eye']['time_offsets'] = eye_time_info[
+                    'time_offsets']
+                data[session]['eeg']['time_offsets'] = eeg_time_info[
+                    'time_offsets']
+                data[session]['game']['time_offsets'] = game_time_info[
+                    'time_offsets']
+            else:
+                # Save the data in dictionary
+                data[session]['eye']['data'] = eye_data
+                data[session]['eeg']['data'] = eeg_data
+                data[session]['game']['data'] = game_data
+
+            # Add time data
+            data[session]['eye']['time_stamps'] = eye_time_info['time_stamps']
+            data[session]['eeg']['time_stamps'] = eeg_time_info['time_stamps']
+            data[session]['game']['time_stamps'] = game_time_info[
+                'time_stamps']
 
         # Read individual difference
         indivdual_diff = read_individual_diff(config, subject)
