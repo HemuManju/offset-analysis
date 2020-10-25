@@ -34,13 +34,20 @@ def _plot_settings():
     return None
 
 
-def _box_plots(models, dataframe, dependent, independent, axes):
+def convert_list_num(x):
+    if isinstance(x, list):
+        return x[0]
+    else:
+        return x
+
+
+def _box_plots(dataframe, dependent, independent, axes):
     feature_dataframe = dataframe[[independent, dependent]]
-    sns.boxplot(x=independent,
-                y=dependent,
-                data=feature_dataframe,
-                ax=axes,
-                width=0.45)
+    temp = feature_dataframe.dropna()
+
+    temp[dependent] = temp.apply(lambda row: convert_list_num(row[dependent]),
+                                 axis=1)
+    sns.boxplot(x=independent, y=dependent, data=temp, ax=axes, width=0.45)
     plt.suptitle("")
     return None
 
@@ -64,58 +71,55 @@ def image_sequence(config):
             ax[i].cla()
 
 
-def eeg_features_visualize(models, dataframe, features, independent):
+def eeg_features_visualize(dataframe, features, independent):
 
-    _plot_settings()
+    plt.style.use('clean_box')
+    temp = dataframe[(dataframe['complexity'] == 'static_red') +
+                     (dataframe['complexity'] == 'baseline')]
 
-    # colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
-    title = [
-        'Distraction', 'Low Engagement', 'High Engagement',
-        'Avg Mental Workload'
-    ]
-
-    _plot_settings()
+    title = ['High Engagement', 'Avg Mental Workload']
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[10, 4])
     for i, feature in enumerate(features):
-        fig, ax = plt.subplots(figsize=[8, 5])
+        _box_plots(temp, feature, independent, ax[i])
+        # ax.set_xticklabels([
+        #     'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
+        #     'Static red\n team', 'Static red\n team with smoke'
+        # ])
+        ax[i].set_xticklabels(['Base line', 'Adversarial\n team'])
+        ax[i].set_ylim([-0.1, 1.1])
+        ax[i].set_ylabel('')
+        ax[i].set_xlabel('Complexities')
+        ax[i].set_title(title[i])
+        ax[i].grid(True)
 
-        _box_plots(models[i], dataframe, feature, independent, ax)
-        ax.set_xticklabels([
-            'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
-            'Static red\n team', 'Static red\n team with smoke'
-        ])
-        ax.set_ylim([0, 1])
-        plt.ylabel('Probability')
-        plt.xlabel('Complexities')
-        plt.title(title[i])
-        # plt.grid(True)
-        plt.tight_layout(pad=0)
-    plt.savefig('test.pdf', dpi=150)
+    ax[0].set_ylabel('Probability')
+    plt.savefig('eeg-metrics.pdf', dpi=150)
     plt.show()
     return None
 
 
-def eye_features_visualize(models, dataframe, features, independent):
+def eye_features_visualize(dataframe, features, independent):
 
     # Default plot settings
-    _plot_settings()
-
-    # colors = ['#6da04b', '#666666', '#e4e4e4', '#002f56', '#2f9fd0']
-    title = [
-        'Blinks', 'Fixations', 'Pupil Size', 'Saccades', 'Scan Path Length'
-    ]
+    plt.style.use('clean_box')
+    temp = dataframe[(dataframe['complexity'] == 'static_red') +
+                     (dataframe['complexity'] == 'baseline')]
+    # title = ['Pupil Size', 'Fixations']
+    labels = ['Avg Pupil Diameter (mm)', 'Num. Fixations']
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[12, 4])
 
     for i, feature in enumerate(features):
-        fig, ax = plt.subplots(figsize=[8, 5])
-        _box_plots(models[i], dataframe, feature, independent, ax)
-        ax.set_xticklabels([
-            'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
-            'Static red\n team', 'Static red\n team with smoke'
-        ])
-        plt.ylabel('Probability')
-        plt.xlabel('Complexities')
-        plt.title(title[i])
-        plt.grid(True)
-        plt.tight_layout(pad=0)
+        _box_plots(temp, feature, independent, ax[i])
+        # ax.set_xticklabels([
+        #     'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
+        #     'Static red\n team', 'Static red\n team with smoke'
+        # ])
+        ax[i].set_xticklabels(['Base line', 'Adversarial\n team'])
+        ax[i].set_ylabel(labels[i])
+        ax[i].set_xlabel('Complexities')
+        # ax[i].set_title(title[i])
+        ax[i].grid(True)
+    plt.savefig('eye-metrics.pdf', dpi=150)
     plt.show()
     return None
 

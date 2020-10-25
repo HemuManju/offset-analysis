@@ -3,8 +3,6 @@ from pathlib import Path
 import deepdish as dd
 import pandas as pd
 
-from .game_analysis import (_get_platoon_node_position, _get_user_actions,
-                            _get_complexity_node_position)
 from .regression import ols_regression
 
 
@@ -45,10 +43,6 @@ def _construct_eeg_data(config, save_dataframe):
         eeg_dataframe.to_hdf(save_path, key='eeg_dataframe')
 
     return eeg_dataframe
-
-
-def eeg_sync_with_game(config, subject, session):
-    pass
 
 
 def eeg_features_analysis(config, features):

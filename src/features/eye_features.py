@@ -1,5 +1,8 @@
+from pathlib import Path
 import numpy
 from data.extract_data import read_xdf_eye_data
+
+import pandas as pd
 
 from .gaze.detectors import (blink_detection, fixation_detection,
                              saccade_detection, scan_path)
@@ -60,3 +63,50 @@ def extract_eye_features(config, subject, session):
     # Calculate the features
     eye_data = _compute_eye_features(eye_epochs, time_stamps)
     return eye_data
+
+
+def _without_keys(dictionary, exclude):
+    for i in exclude:
+        dictionary.pop(i)
+    return dictionary
+
+
+def extract_eye_dataframe(config):
+    eye_dataframe = []
+    session_name = {
+        'S001': 'baseline',
+        'S002': 'static_red',
+        'S003': 'dynamic_red',
+        'S004': 'static_red_smoke',
+        'S005': 'dynamic_red_smoke'
+    }
+
+    for subject in config['subjects']:
+        for session in config['sessions']:
+            raw_data = extract_eye_features(config, subject, session)
+            raw_data = _without_keys(raw_data,
+                                     ['time_kd_tree'])  # No need for KD tree
+
+            # Need to orient and transpose,
+            # because the data are of not same length
+            raw_data['n_fixations'] = [raw_data['n_fixations']]
+            raw_data['n_saccades'] = [raw_data['n_saccades']]
+            raw_data['avg_pupil_size'] = [
+                numpy.nanmean(raw_data['pupil_size'])
+            ]
+
+            temp_df = pd.DataFrame.from_dict(raw_data,
+                                             orient='index').transpose()
+            # Add additional information
+            temp_df['subject'] = subject
+            temp_df['complexity'] = session_name[session]
+
+            # Append it the the global dataframe
+            eye_dataframe.append(temp_df)
+
+    eye_dataframe = pd.concat(eye_dataframe)
+
+    save_path = Path(__file__).parents[2] / config['eye_features_path']
+    eye_dataframe.to_hdf(save_path, key='eye_dataframe')
+
+    return eye_dataframe

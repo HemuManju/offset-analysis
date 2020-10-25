@@ -4,14 +4,14 @@ n_electrodes: 30
 sfreq: 256.0
 overlap: 0.75
 subjects: [
-    '2001',
-    '2002',
-    '2003',
-    '2004',
-    '2005',
-    '2007',
-    '2008',
-    '2009',
+    # '2001',
+    # '2002',
+    # '2003',
+    # '2004',
+    # '2005',
+    # '2007',
+    # '2008',
+    # '2009',
     '2011',
     '2012',
     '2013',
@@ -47,5 +47,6 @@ eye_features_path: 'data/processed/eye_features_exp_0_dataframe.h5'
 game_features_path: 'data/processed/game_features_exp_0_dataframe.h5'
 offset_features_path: 'data/processed/offset_features_exp_0_dataset.h5'
 individual_diff_path: 'data/processed/individual_diff_exp_0_dataframe.h5'
+eeg_eye_features_path: 'data/processed/offset_features_exp_1_dataset.h5'
 image_save_path: 'data/processed/image_data/'
 ##---------------------------------------------------------------------##

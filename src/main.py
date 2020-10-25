@@ -1,10 +1,11 @@
 import yaml
 from pathlib import Path
+import pandas as pd
 
 from data.extract_data import (extract_offset_data, read_xdf_eeg_data)
 from data.clean_data import clean_eeg_data, clean_with_ica
-from data.b_alert_data import write_mne_to_b_alert_edf
-from data.utils import save_dataset, read_dataset
+from data.b_alert_data import write_mne_to_b_alert_edf, extract_b_alert_dataframe
+from data.utils import save_dataset
 
 from features.offset_features import extract_offset_features
 
@@ -12,7 +13,6 @@ from models.eeg_analysis import eeg_features_analysis
 from models.eye_analysis import (eye_features_analysis, calculate_fixations)
 from models.game_analysis import (_get_user_actions, graph_with_user_actions,
                                   game_with_platoons, _target_check)
-from models.game_recreate import game_visual
 from models.indv_analysis import individual_features_analysis
 
 from visualization.visualize import (eeg_features_visualize, animate_bar_plot,
@@ -112,11 +112,16 @@ with skip_run('skip', 'Visualize platoons on the image') as check, check():
     platoon_positions = game_with_platoons(config, subject, session)
     draw_platoon_in_map_coor(platoon_positions)
 
-with skip_run('skip', 'Visualize game play') as check, check():
-    subject = config['subjects'][8]
-    session = config['sessions'][4]
-    game_visual(config, subject, session)
-
 with skip_run('skip', 'Indiv difference analysis') as check, check():
-    # individual_features_analysis(config)
+    individual_features_analysis(config)
     _target_check(config)
+
+with skip_run('skip', 'B-alert feature visualization') as check, check():
+    features = ['prob_high_eng', 'prob_ave_workload']
+    data_frame = extract_b_alert_dataframe(config)
+    eeg_features_visualize(data_frame, features, 'complexity')
+
+with skip_run('skip', 'B-alert feature visualization') as check, check():
+    data_frame = pd.read_hdf(config['eye_features_path'])
+    features = ['avg_pupil_size', 'n_fixations']
+    eye_features_visualize(data_frame, features, 'complexity')

@@ -1,11 +1,14 @@
 import os
 
+import pandas as pd
 import mne
 from autoreject import get_rejection_threshold
 
 from .extract_data import read_xdf_eeg_data
 from .clean_data import clean_with_ica
 from .mne_write_edf import write_edf
+
+from features.eeg_features import extract_b_alert_features
 
 
 def decontaminate_eeg(raw_eeg, config, ica_clean):
@@ -109,3 +112,34 @@ def write_mne_to_b_alert_edf(config, clean_with_ica, save_data):
             if save_data:
                 write_edf(decon_eeg, save_path + edf_file, overwrite=True)
     return None
+
+
+def extract_b_alert_dataframe(config):
+    eeg_dataframe = []
+    session_name = {
+        'S001': 'baseline',
+        'S002': 'static_red',
+        'S003': 'dynamic_red',
+        'S004': 'static_red_smoke',
+        'S005': 'dynamic_red_smoke'
+    }
+
+    for subject in config['subjects']:
+        for session in config['sessions']:
+            data = extract_b_alert_features(config, subject, session)
+            temp_df = pd.DataFrame.from_dict(data)
+
+            # Add additional information
+            temp_df['subject'] = subject
+            temp_df['complexity'] = session_name[session]
+
+            # Remove first 10% and last 10% of the data
+            n = int(0.10 * temp_df.shape[0])
+            temp_df.drop(temp_df.head(n).index, inplace=True)
+            temp_df.drop(temp_df.tail(n).index, inplace=True)
+
+            # Append it the the global dataframe
+            eeg_dataframe.append(temp_df)
+
+    eeg_dataframe = pd.concat(eeg_dataframe)
+    return eeg_dataframe
