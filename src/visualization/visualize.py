@@ -71,29 +71,33 @@ def image_sequence(config):
             ax[i].cla()
 
 
-def eeg_features_visualize(dataframe, features, independent):
+def eeg_features_visualize(config, dataframe, features, independent):
 
     plt.style.use('clean_box')
-    temp = dataframe[(dataframe['complexity'] == 'static_red') +
-                     (dataframe['complexity'] == 'baseline')]
+    df_temp = dataframe[(dataframe['complexity'] == 'static_red') +
+                        (dataframe['complexity'] == 'baseline')]
 
-    title = ['High Engagement', 'Avg Mental Workload']
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[10, 4])
-    for i, feature in enumerate(features):
-        _box_plots(temp, feature, independent, ax[i])
-        # ax.set_xticklabels([
-        #     'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
-        #     'Static red\n team', 'Static red\n team with smoke'
-        # ])
-        ax[i].set_xticklabels(['Base line', 'Adversarial\n team'])
-        ax[i].set_ylim([-0.1, 1.1])
-        ax[i].set_ylabel('')
-        ax[i].set_xlabel('Complexities')
-        ax[i].set_title(title[i])
-        ax[i].grid(True)
+    for j, subject in enumerate(config['subjects']):
+        temp = df_temp[(df_temp['subject'] == subject)]
 
-    ax[0].set_ylabel('Probability')
-    plt.savefig('eeg-metrics.pdf', dpi=150)
+        title = ['High Engagement', 'Avg Mental Workload']
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[10, 4])
+        for i, feature in enumerate(features):
+            _box_plots(temp, feature, independent, ax[i])
+            # ax.set_xticklabels([
+            #     'Base line', 'Dynamic\n red team', 'Dynamic red\n team with smoke',
+            #     'Static red\n team', 'Static red\n team with smoke'
+            # ])
+            ax[i].set_xticklabels(['Base line', 'Adversarial\n team'])
+            ax[i].set_ylim([-0.1, 1.1])
+            ax[i].set_ylabel('')
+            ax[i].set_xlabel('Complexities')
+            ax[i].set_title(title[i])
+            ax[i].grid(True)
+
+        ax[0].set_ylabel('Probability')
+        if j == 1:
+            plt.savefig('eeg-metrics.pdf', dpi=150)
     plt.show()
     return None
 
@@ -105,8 +109,8 @@ def eye_features_visualize(dataframe, features, independent):
     temp = dataframe[(dataframe['complexity'] == 'static_red') +
                      (dataframe['complexity'] == 'baseline')]
     # title = ['Pupil Size', 'Fixations']
-    labels = ['Avg Pupil Diameter (mm)', 'Num. Fixations']
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[12, 4])
+    labels = ['Avg Pupil Dia (mm)', 'Num. of Fixations']
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=[8, 4])
 
     for i, feature in enumerate(features):
         _box_plots(temp, feature, independent, ax[i])
@@ -119,6 +123,7 @@ def eye_features_visualize(dataframe, features, independent):
         ax[i].set_xlabel('Complexities')
         # ax[i].set_title(title[i])
         ax[i].grid(True)
+    plt.tight_layout(pad=1.0)
     plt.savefig('eye-metrics.pdf', dpi=150)
     plt.show()
     return None

@@ -113,13 +113,15 @@ with skip_run('skip', 'Visualize platoons on the image') as check, check():
     draw_platoon_in_map_coor(platoon_positions)
 
 with skip_run('skip', 'Indiv difference analysis') as check, check():
-    individual_features_analysis(config)
-    _target_check(config)
+    # individual_features_analysis(config)
+    data = pd.read_csv('data/external/df_mot_engage.csv')
+    print(data['subject'].unique())
+    # _target_check(config)
 
 with skip_run('skip', 'B-alert feature visualization') as check, check():
-    features = ['prob_high_eng', 'prob_ave_workload']
+    features = ['prob_high_eng', 'prob_fbds_workload']
     data_frame = extract_b_alert_dataframe(config)
-    eeg_features_visualize(data_frame, features, 'complexity')
+    eeg_features_visualize(config, data_frame, features, 'complexity')
 
 with skip_run('skip', 'B-alert feature visualization') as check, check():
     data_frame = pd.read_hdf(config['eye_features_path'])
