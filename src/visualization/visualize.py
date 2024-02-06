@@ -315,3 +315,18 @@ def draw_user_action_fixations(fixations, user_action):
         ax.imshow(img)
         draw_heatmap(fixation, dispsize=(1500, 750), ax=ax, imagefile=img)
         plt.cla()
+
+
+def draw_vs_mot(df):
+    plt.style.use('clean')
+    fig, ax = plt.subplots(figsize=(4, 4))
+    ax.scatter(df['vs'], df['mot'])
+    ax.set_xlabel('Visual scanning score')
+    ax.set_ylabel('Multi-object tracking score')
+
+    # # Add subject information
+    # for i, txt in enumerate(df['subject']):
+    #     plt.annotate(txt, (df['vs'][i], df['mot'][i]))
+
+    plt.tight_layout()
+    plt.show()

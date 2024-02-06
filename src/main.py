@@ -2,7 +2,8 @@ import yaml
 from pathlib import Path
 
 import deepdish as dd
-from data.extract_data import extract_offset_data
+import pandas as pd
+from data.extract_data import extract_offset_data, read_individual_diff
 
 from data.utils import save_dataset
 
@@ -12,7 +13,7 @@ from features.offset_features import (extract_synched_features,
                                       convert_eeg_eye_to_dataframe)
 from features.utils import read_data
 
-from visualization.visualize import draw_fixation_in_global_coor
+from visualization.visualize import draw_fixation_in_global_coor, draw_vs_mot
 from visualization.epoch_visualize import topo_map
 from visualization.regression_visualize import plot_mixed_effect_model
 from visualization.time_visualize import plot_time_delays
@@ -77,5 +78,18 @@ with skip_run('skip', 'Plot mixed effect model') as check, check():
     id_difference = 'mot'
     plot_mixed_effect_model(config, option, id_difference)
 
-with skip_run('run', 'Plot time delay') as check, check():
+with skip_run('skip', 'Plot time delay') as check, check():
     plot_time_delays(config)
+
+with skip_run('run', 'Individual difference') as check, check():
+    data = []
+    subjects = [
+        '2009', '2010', '2011', '2013', '2014', '2015', '2017', '2018', '2020'
+    ]
+    for subject in subjects:
+        df = read_individual_diff(config, subject)
+        df['subject'] = subject
+        data.append(df)
+
+    df = pd.DataFrame.from_dict(data, orient='columns')
+    draw_vs_mot(df)
